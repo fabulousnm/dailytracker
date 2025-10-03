@@ -1,0 +1,372 @@
+#:kivy 2.0.0
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+<DailyTracker>:
+    tab_width: root.width / 3
+
+
+    TabbedPanelItem:
+        text: 'Routine'
+
+        ScheduleTab:
+            id: schedule_tab
+            app: root
+
+    TabbedPanelItem:
+        text: 'Trace'
+
+        TrackingTab:
+            id: tracking_tab
+            app: root
+
+    TabbedPanelItem:
+        text: 'Personalization'
+
+        PersonalizationTab:
+            id: personalization_tab
+            app: root
+
+<ScheduleTab>:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 10
+
+    Label:
+        text: 'Routine'
+        font_size: '24sp'
+        bold: True
+        size_hint_y: None
+        height: 50
+
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 60
+        spacing: 10
+
+        Label:
+            text: 'Get-up time:'
+            font_size: '18sp'
+            color: 0, 0, 0, 1
+            size_hint_x: 0.5
+            halign: 'right'
+
+        Label:
+            id: wake_time_label
+            text: '07:00'
+            font_size: '18sp'
+            bold: True
+            color: 0.2, 0.6, 0.8, 1
+            size_hint_x: 0.5
+            halign: 'left'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 60
+        spacing: 10
+
+        Label:
+            text: 'sleeping time:'
+            font_size: '18sp'
+            color: 0, 0, 0, 1
+            size_hint_x: 0.5
+            halign: 'right'
+
+        Label:
+            id: sleep_time_label
+            text: '23:00'
+            font_size: '18sp'
+            bold: True
+            color: 0.8, 0.2, 0.2, 1
+            size_hint_x: 0.5
+            halign: 'left'
+
+    Label:
+        text: 'daily logs:'
+        font_size: '20sp'
+        bold: True
+        size_hint_y: None
+        height: 40
+        color: 0, 0, 0, 1
+
+    ScrollView:
+        BoxLayout:
+            id: activity_container
+            orientation: 'vertical'
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: 5
+
+<ActivityItem>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: 80
+    padding: 10
+    spacing: 5
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.1  # 几乎完全透明
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label:
+        text: root.location + ' ' + root.event_type
+        font_size: '16sp'
+        bold: True
+        size_hint_y: None
+        height: 25
+        color: 0, 0, 0, 1
+
+    Label:
+        text: 'time: ' + root.start_time + ' - ' + root.end_time
+        font_size: '14sp'
+        size_hint_y: None
+        height: 20
+        color: 0.3, 0.3, 0.3, 1
+
+    Label:
+        text: 'duration: ' + str(root.duration) + '秒'
+        font_size: '14sp'
+        size_hint_y: None
+        height: 20
+        color: 0.5, 0.2, 0.8, 1
+
+<TrackingTab>:
+    orientation: 'vertical'
+    padding: 10
+    spacing: 10
+
+    Label:
+        text: 'Trace'
+        font_size: '24sp'
+        bold: True
+        size_hint_y: None
+        height: 50
+        color: 0, 0, 0, 1
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 40
+        spacing: 10
+
+        Label:
+            text: 'threshold (m/s):'
+            color: 0, 0, 0, 1
+            size_hint_x: 0.5
+
+        Slider:
+            id: speed_slider
+            min: 1
+            max: 10
+            value: 5
+            size_hint_x: 0.5
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 40
+        spacing: 10
+
+        Label:
+            text: 'speed now:'
+            color: 0, 0, 0, 1
+            size_hint_x: 0.5
+
+        Label:
+            id: current_speed_label
+            text: '0.0 m/s'
+            font_size: '16sp'
+            bold: True
+            color: 0.2, 0.8, 0.2, 1
+            size_hint_x: 0.5
+
+    Label:
+        text: 'activities log:'
+        font_size: '18sp'
+        bold: True
+        size_hint_y: None
+        height: 30
+        color: 0, 0, 0, 1
+
+    ScrollView:
+        BoxLayout:
+            id: location_logs
+            orientation: 'vertical'
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: 5
+
+<LocationLogEntry>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: 80
+    padding: 10
+    spacing: 5
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.1  # 几乎完全透明
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Label:
+        text: root.location_text
+        font_size: '16sp'
+        bold: True
+        size_hint_y: None
+        height: 25
+        color: 0, 0, 0, 1
+
+    Label:
+        text: root.duration_text
+        font_size: '14sp'
+        size_hint_y: None
+        height: 20
+        color: 0.3, 0.3, 0.3, 1
+
+    Label:
+        text: root.activity_text
+        font_size: '14sp'
+        size_hint_y: None
+        height: 20
+        color: 0.5, 0.2, 0.8, 1
+
+<PersonalizationTab>:
+    orientation: 'vertical'
+    padding: 20
+    spacing: 15
+
+    # 添加调试主题按钮
+    Label:
+        text: 'Debug Theme Buttons:'
+        font_size: '16sp'
+        bold: True
+        size_hint_y: None
+        height: 30
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        spacing: 5
+
+        Button:
+            text: 'SUNNY'
+            background_color: 1, 0.84, 0, 1  # 黄色
+            on_press: root.change_theme('sunny theme')
+
+        Button:
+            text: 'CLOUDY'
+            background_color: 0.5, 0.5, 0.5, 1  # 灰色
+            on_press: root.change_theme('cloudy theme')
+
+        Button:
+            text: 'RAINY'
+            background_color: 0, 0, 1, 1  # 蓝色
+            on_press: root.change_theme('rainy theme')
+
+    # 原有的其他内容保持不变...
+    Label:
+        text: 'personalization setting'
+        font_size: '24sp'
+        bold: True
+        size_hint_y: None
+        height: 50
+
+    Label:
+        text: 'personalization setting'
+        font_size: '24sp'
+        bold: True
+        size_hint_y: None
+        height: 50
+
+
+    Label:
+        text: 'SJTU - Manage your day!'
+        font_size: '16sp'
+        italic: True
+        size_hint_y: None
+        height: 40
+
+
+    Label:
+        text: 'main color setting:'
+        font_size: '18sp'
+        bold: True
+        size_hint_y: None
+        height: 30
+
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 50
+        spacing: 10
+
+        Label:
+            text: 'choice theme:'
+            font_size: '16sp'
+
+            size_hint_x: 0.4
+
+        Spinner:
+            id: theme_spinner
+            text: 'sunny theme'
+            values: ['sunny theme', 'cloudy theme', 'rainy theme']
+            size_hint_x: 0.6
+            on_text: root.change_theme(self.text)
+
+    Label:
+        text: 'module color customization:'
+        font_size: '18sp'
+        bold: True
+        size_hint_y: None
+        height: 30
+
+
+    GridLayout:
+        cols: 2
+        size_hint_y: None
+        height: 150
+        spacing: 10
+        padding: 10
+
+        Button:
+            text: 'routine module'
+            background_color: 0.2, 0.6, 0.8, 1
+            on_press: root.customize_color('schedule')
+
+        Button:
+            text: 'tracing module'
+            background_color: 0.2, 0.8, 0.6, 1
+            on_press: root.customize_color('tracking')
+
+        Button:
+            text: 'personalization module'
+            background_color: 0.8, 0.6, 0.2, 1
+            on_press: root.customize_color('personalization')
+
+        Button:
+            text: 'resetting all the color'
+            background_color: 0.8, 0.4, 0.4, 1
+            on_press: root.app.reset_settings()
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 60
+        spacing: 10
+
+        Button:
+            text: 'save settings'
+            background_color: 0.4, 0.7, 0.4, 1
+            on_press: root.app.save_settings()
+
+        Button:
+            text: 'set as default'
+            background_color: 0.8, 0.4, 0.4, 1
+            on_press: root.app.reset_settings()

@@ -1,0 +1,66 @@
+{
+  "sleep_time": "23:00",
+  "wake_time": "07:00",
+  "locations": {
+    "home": {
+      "name": "Home",
+      "events": [
+        "Rest",
+        "Sleep",
+        "Gaming"
+      ],
+      "coords": [
+        31.0258,
+        121.4376
+      ]
+    },
+    "canteen": {
+      "name": "Cafeteria",
+      "events": [
+        "Eating"
+      ],
+      "coords": [
+        31.026,
+        121.438
+      ]
+    },
+    "classroom": {
+      "name": "Classroom",
+      "events": [
+        "Studying"
+      ],
+      "coords": [
+        31.0255,
+        121.437
+      ]
+    },
+    "library": {
+      "name": "Library",
+      "events": [
+        "Learning",
+        "Rest"
+      ],
+      "coords": [
+        31.0262,
+        121.4378
+      ]
+    },
+    "sports": {
+      "name": "Sports Field",
+      "events": [
+        "Exercise",
+        "Running"
+      ],
+      "coords": [
+        31.0268,
+        121.439
+      ]
+    }
+  },
+  "speed_threshold": 5.0,
+  "running_threshold": 3.0,
+  "stay_threshold": 60,
+  "personalization": {},
+  "notes": [],
+  "activities": []
+}
