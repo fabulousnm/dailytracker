@@ -22,11 +22,6 @@ from kivy.uix.spinner import Spinner  # 下拉选择器
 from kivy.uix.popup import Popup  # 弹出窗口
 
 # ========== 尝试导入组件 ==========
-
-
-
-
-#修改了两次
 try:
     # 尝试从组件模块导入各功能标签页
     from components.schedule_tab import ScheduleTab
