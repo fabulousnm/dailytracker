@@ -1,4 +1,13 @@
 # main.py - Complete English Version with Component Integration
+
+
+
+
+
+
+
+
+
 import os
 import sys
 import json
