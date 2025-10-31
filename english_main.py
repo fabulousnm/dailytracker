@@ -42,10 +42,6 @@ except ImportError as e:
             self.orientation = 'vertical'
             self.padding = 20
             self.spacing = 10
-            # 添加默认UI元素
-            self.add_widget(Label(text='Daily Schedule', font_size='24sp', bold=True))
-            self.add_widget(Label(text='Wake Up: 07:00', font_size='18sp'))
-            self.add_widget(Label(text='Sleep Time: 23:00', font_size='18sp'))
 
         def update_alarm_display(self):
             """更新闹钟显示（空实现）"""
@@ -62,9 +58,7 @@ except ImportError as e:
             self.orientation = 'vertical'
             self.padding = 10
             self.spacing = 10
-            # 添加默认UI元素
-            self.add_widget(Label(text='Daily Tracking', font_size='24sp', bold=True))
-            self.add_widget(Label(text='Location Tracking', font_size='16sp'))
+
 
         def update_theme(self, colors):
             """应用主题颜色（空实现）"""
@@ -77,9 +71,7 @@ except ImportError as e:
             self.orientation = 'vertical'
             self.padding = 20
             self.spacing = 15
-            # 添加默认UI元素
-            self.add_widget(Label(text='Personalization', font_size='24sp', bold=True))
-            self.add_widget(Label(text='SJTU - Manage Your Time!', font_size='14sp', italic=True))
+
 
         def update_theme(self, colors):
             """应用主题颜色（空实现）"""
@@ -128,7 +120,7 @@ class DailyTracker(TabbedPanel):
                 'background': '#F0F8FF' # 背景 - 浅蓝
             }
         }
-        self.current_theme = 'sunny'  # 当前主题默认晴天
+       # self.current_theme = 'sunny'  # 当前主题默认晴天
 
         # ========== 初始化数据文件 ==========
         self.data_file = "user_data.json"  # 用户数据存储文件
@@ -237,6 +229,7 @@ class DailyTracker(TabbedPanel):
 
     def create_default_data(self):
         """创建默认用户数据"""
+        """
         self.user_data = {
             'sleep_time': "23:00",  # 默认睡眠时间
             'wake_time': "07:00",   # 默认唤醒时间
@@ -276,7 +269,7 @@ class DailyTracker(TabbedPanel):
         }
         self.save_user_data()  # 保存默认数据
         print("Default user data created")
-
+"""
     def save_user_data(self):
         """保存用户数据到文件"""
         try:
