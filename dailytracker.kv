@@ -2,11 +2,10 @@
 #:import get_color_from_hex kivy.utils.get_color_from_hex
 
 <DailyTracker>:
+
     tab_width: root.width / 3
-
-
     TabbedPanelItem:
-        text: 'Routine'
+        text: 'Time'
 
         ScheduleTab:
             id: schedule_tab
@@ -30,6 +29,13 @@
     orientation: 'vertical'
     padding: 20
     spacing: 10
+<ScheduleTab>:
+    canvas.before:
+        Rectangle:
+            pos:self.pos
+            size: self.size
+            source: 'assets/6b590634748415f7d544d94bef0771bc.png'
+            tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
 
     Label:
         text: 'Routine'
@@ -37,6 +43,7 @@
         bold: True
         size_hint_y: None
         height: 50
+        color: get_color_from_hex('#FFFFFF')
 
 
     BoxLayout:
@@ -51,6 +58,8 @@
             color: 0, 0, 0, 1
             size_hint_x: 0.5
             halign: 'right'
+            color: get_color_from_hex('#e2695d')
+
 
         Label:
             id: wake_time_label
@@ -60,6 +69,8 @@
             color: 0.2, 0.6, 0.8, 1
             size_hint_x: 0.5
             halign: 'left'
+            color: get_color_from_hex('#e2695d')
+
 
     BoxLayout:
         orientation: 'horizontal'
@@ -73,6 +84,8 @@
             color: 0, 0, 0, 1
             size_hint_x: 0.5
             halign: 'right'
+            color: get_color_from_hex('#e2695d')
+
 
         Label:
             id: sleep_time_label
@@ -82,6 +95,8 @@
             color: 0.8, 0.2, 0.2, 1
             size_hint_x: 0.5
             halign: 'left'
+            color: get_color_from_hex('#e2695d')
+
 
     Label:
         text: 'daily logs:'
@@ -90,6 +105,8 @@
         size_hint_y: None
         height: 40
         color: 0, 0, 0, 1
+        color: get_color_from_hex('#e2695d')
+
 
     ScrollView:
         BoxLayout:
