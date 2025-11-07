@@ -6,6 +6,16 @@ from kivy.graphics import Color, Rectangle
 from kivy.utils import get_color_from_hex
 import datetime
 import json
+import os
+
+from kivy.properties import StringProperty, NumericProperty
+
+class ActivityItem(BoxLayout):
+    content = StringProperty("")  # 简化后的单一字符串属性
+
+    def __init__(self, content="", **kwargs):
+        super().__init__(**kwargs)
+        self.content = content
 
 
 class ScheduleTab(BoxLayout):
@@ -14,28 +24,31 @@ class ScheduleTab(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.activities = []
-        self.current_activity = None
-        self.activity_start_time = None
+        Clock.schedule_once(self._post_init)
 
-        # 初始化活动数据
+    def _post_init(self, dt):
+        """初始化显示"""
         self.load_activities()
-
-        # 延迟更新显示，确保界面已加载
-        Clock.schedule_once(self.update_alarm_display, 0.1)
-        Clock.schedule_once(self.update_activities_display, 0.2)
+        self.display_activities()
 
     def load_activities(self):
-        """加载活动数据"""
+        """优化后的加载方法"""
         try:
-            with open('activities.json', 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                self.activities = data.get('activities', [])
-        except FileNotFoundError:
-            self.activities = []
+            if os.path.exists('activities.json'):
+                with open('activities.json', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    # 支持两种格式：直接字符串数组或带logs键的字典
+                    self.activities = data.get('logs', data) if isinstance(data, dict) else data
+            else:
+                self.activities = [
+                    "09:00-10:30 教室上课",
+                    "12:00-13:00 一餐厅用餐",
+                    "15:00-16:30 图书馆学习"
+                ]
+                self._save_activities()
         except Exception as e:
-            print(f"fail: {e}")
+            print(f"加载失败: {str(e)}")
             self.activities = []
-
     def save_activities(self):
         """保存活动数据"""
         try:
@@ -52,104 +65,40 @@ class ScheduleTab(BoxLayout):
                 sleep_label = self.ids.get('sleep_time_label')
                 if wake_label and sleep_label:
                     wake_label.text = self.app.user_data.get('wake_time', '07:00')
-                    sleep_label.text = self.app.user_data.get('sleep_time', '23:00')
+                    sleep_label.text = self.app.user_data.get('sleep_time', '12:00')
             except Exception as e:
                 print(f"fail: {e}")
 
-    def update_activities_display(self, dt=None):
-        """更新活动显示"""
+    def display_activities(self):
+        """优化显示方法"""
         if hasattr(self, 'ids'):
             try:
-                activity_container = self.ids.get('activity_container')
-                if activity_container:
-                    # 清空现有活动显示
-                    activity_container.clear_widgets()
+                container = self.ids.activity_container
+                container.clear_widgets()
 
-                    # 添加今天的活动记录（按时间倒序）
-                    today = datetime.datetime.now().strftime('%Y-%m-%d')
-                    today_activities = [a for a in self.activities if a.get('date', '') == today]
-                    today_activities.sort(key=lambda x: x.get('start_time', ''), reverse=True)
+                # 添加日期分隔线示例
+                today = datetime.date.today().strftime("%Y-%m-%d")
+                container.add_widget(ActivityItem(content=f"                  === {today} === \n\n              今天也是活力满满的一天喵！"))
 
-                    for activity in today_activities[:10]:  # 只显示最近10条
-                        self.add_activity_to_display(activity)
+                for activity in sorted(self.activities[-20:]):  # 限制显示数量
+                    if isinstance(activity, dict):  # 处理字典格式数据
+                        text = f"       {activity.get('time'," ")}   不要忘记   {activity.get('event', '')}"
+                    else:
+                        text = str(activity)
+                    container.add_widget(ActivityItem(content=text))
             except Exception as e:
-                print(f"更新活动显示失败: {e}")
+                print(f"显示失败: {str(e)}")
 
-    def add_activity_to_display(self, activity):
-        """添加活动记录到显示"""
-        if hasattr(self, 'ids'):
-            try:
-                activity_container = self.ids.get('activity_container')
-                if activity_container:
-                    # 创建活动项
-                    activity_item = ActivityItem(
-                        location=activity.get('location', 'unknown'),
-                        event_type=activity.get('event_type', 'unknown'),
-                        start_time=activity.get('start_time', '--:--'),
-                        end_time=activity.get('end_time', '--:--'),
-                        duration=activity.get('duration', 0)
-                    )
-                    activity_container.add_widget(activity_item)
-            except Exception as e:
-                print(f"fail: {e}")
-
-    def record_activity(self, location, event_type, duration):
-        """记录活动"""
+    def add_log_entry(self, content):
+        """添加新条目的优化方法"""
+        if content:
+            self.activities.append(content)
+            self._save_activities()
+            self.display_activities()
+    def _save_activities(self):
+        """保存活动数据到JSON文件"""
         try:
-            activity_record = {
-                'location': location,
-                'event_type': event_type,
-                'start_time': (datetime.datetime.now() - datetime.timedelta(seconds=duration)).strftime('%H:%M'),
-                'end_time': datetime.datetime.now().strftime('%H:%M'),
-                'duration': duration,
-                'date': datetime.datetime.now().strftime('%Y-%m-%d')
-            }
-
-            self.activities.append(activity_record)
-            self.save_activities()
-
-            # 更新显示
-            self.update_activities_display()
-
-            print(f"记录活动: at{location} {event_type} for{duration} seconds")
-
+            with open('activities.json', 'w', encoding='utf-8') as f:
+                json.dump({"logs": self.activities}, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"fail: {e}")
-
-    def clear_activities(self):
-        """清空活动"""
-        self.activities = []
-        self.save_activities()
-        self.update_activities_display()
-
-    def update_theme(self, colors):
-        """Update theme"""
-        try:
-            print(f"🎨 ScheduleTab applying theme: {colors['background']}")
-
-            # 清除现有canvas
-            self.canvas.before.clear()
-
-            # 使用更明显的背景色
-            with self.canvas.before:
-                from kivy.graphics import Color, Rectangle
-                bg_color = get_color_from_hex(colors['background'])
-                Color(*bg_color)
-                # 确保覆盖整个区域
-                Rectangle(pos=(0, 0), size=Window.size)
-
-            # 强制重绘
-            self.canvas.ask_update()
-
-        except Exception as e:
-            print(f"ScheduleTab theme update failed: {e}")
-
-class ActivityItem(BoxLayout):
-    def __init__(self, location="", event_type="", start_time="", end_time="", duration=0, **kwargs):
-        super().__init__(**kwargs)
-        self.location = location
-        self.event_type = event_type
-        self.start_time = start_time
-
-        self.end_time = end_time
-        self.duration = duration
+            print(f"保存活动数据失败: {e}")

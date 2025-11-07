@@ -129,16 +129,17 @@ class TrackingTab(BoxLayout):
                     location_logs.clear_widgets()
             except Exception as e:
                 print(f"fail: {e}")
-
+#trackinglabel里面的地点日志
     def add_sample_logs(self):
         """添加示例日志（用于测试）"""
         try:
             sample_logs = [
-                LocationLogEntry("classrooom", "duration: 5400 sed", "at class"),
-                LocationLogEntry("dinning hall", "duration: 2700 sed", "at meal"),
-                LocationLogEntry("start running", "", "speed: 4.5 m/s"),
-                LocationLogEntry("finish running", "duration: 1200 sed", "average speed: 4.2 m/s"),
-                LocationLogEntry("library", "duration: 7200 sed", "reading")
+                LocationLogEntry("教室", "持续时间: 5400 sed", "at class"),
+                LocationLogEntry("一餐厅", "持续时间: 2700 sed", "at meal"),
+                LocationLogEntry("你在跑步", "", "speed: 4.5 m/s"),
+                LocationLogEntry("你跑完了！", "持续时间: 1200 sed", "average speed: 4.2 m/s"),
+                LocationLogEntry("你在卷！", "持续时间: 7200 sed", "reading"),
+                LocationLogEntry("你在....嘿嘿", "持续时间: 7200 sed", "reading")
             ]
 
             for log in sample_logs:

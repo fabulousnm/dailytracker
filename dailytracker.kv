@@ -1,25 +1,51 @@
 #:kivy 2.0.0
 #:import get_color_from_hex kivy.utils.get_color_from_hex
-
+<TabbedPanelItem>:#给按钮添加背景颜色，background_color: 0.69, 0.84, 0.88, 1.0
+    background_normal: ''
+    background_down: ''
+    spacing:10
+<BoldLabel@Label>:#目前还没使用，给字体加粗的装饰器，引用成BoldLabel就可以
+    # 将 #6699FF 转换为 RGBA 值 (r=0.4, g=0.6, b=1, a=1)
+    color: 0.4, 0.6, 1, 1  # 文本本体颜色 (#6699FF)
+    canvas.before:
+        Color:
+            rgba: 0.4, 0.6, 1, 1  # 描边颜色 (#6699FF)
+        Rectangle:
+            texture: self.texture
+            pos: self.x-1, self.y-1  # 描边偏移（1像素）
+            size: self.texture_size[0]+2, self.texture_size[1]+2
 <DailyTracker>:
 
     tab_width: root.width / 3
     TabbedPanelItem:
-        text: 'Time'
+        text: '时间( • ̀ω•́ )'
+        font_name:'simsun.ttc'
+        color: 1, 1, 1, 1  # 纯白（RGBA值，Alpha=1表示不透明）
+        bold:True
+        background_color: 0.69, 0.84, 0.88, 1.0
+
 
         ScheduleTab:
             id: schedule_tab
             app: root
 
     TabbedPanelItem:
-        text: 'Trace'
+        text: '轨迹ψ(｀∇´)ψ'
+        font_name:'simsun.ttc'
+        color: 1, 1, 1, 1  # 纯白（RGBA值，Alpha=1表示不透明）
+        bold:True
+        background_color: 0.69, 0.84, 0.88, 1.0
 
         TrackingTab:
             id: tracking_tab
             app: root
 
     TabbedPanelItem:
-        text: 'Personalization'
+        text: '个性( º﹃º )'
+        font_name:'simsun.ttc'
+        color: 1, 1, 1, 1  # 纯白（RGBA值，Alpha=1表示不透明）
+        bold:True
+        background_color: 0.69, 0.84, 0.88, 1.0
 
         PersonalizationTab:
             id: personalization_tab
@@ -34,16 +60,23 @@
         Rectangle:
             pos:self.pos
             size: self.size
-            source: 'assets/6b590634748415f7d544d94bef0771bc.png'
+            source: 'assets/img.png'#scheduletabe的背景图
             tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
+        Color:#调整后续的元素的颜色，透明度等
+            rgba: 1, 1, 1, 0.5  # 白色 + 50%透明度
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
     Label:
-        text: 'Routine'
+        text: '时间表'
+        font_name:'SIMYOU.TTF'
         font_size: '24sp'
         bold: True
         size_hint_y: None
         height: 50
-        color: get_color_from_hex('#FFFFFF')
+        color: get_color_from_hex('#6699FF')
+
 
 
     BoxLayout:
@@ -53,23 +86,23 @@
         spacing: 10
 
         Label:
-            text: 'Get-up time:'
-            font_size: '18sp'
+            text: '        苏醒时刻:'
+            bold:True
+            font_name:'SIMYOU.TTF'
+            font_size: '24sp'
             color: 0, 0, 0, 1
             size_hint_x: 0.5
             halign: 'right'
-            color: get_color_from_hex('#e2695d')
+            color: get_color_from_hex('#6699FF')
 
 
         Label:
             id: wake_time_label
-            text: '07:00'
             font_size: '18sp'
             bold: True
-            color: 0.2, 0.6, 0.8, 1
             size_hint_x: 0.5
             halign: 'left'
-            color: get_color_from_hex('#e2695d')
+            color: get_color_from_hex('#6699FF')
 
 
     BoxLayout:
@@ -79,33 +112,52 @@
         spacing: 10
 
         Label:
-            text: 'sleeping time:'
-            font_size: '18sp'
+            text: '      安眠处:'
+            font_size: '24sp'
+            font_name:'SIMYOU.TTF'
             color: 0, 0, 0, 1
             size_hint_x: 0.5
             halign: 'right'
-            color: get_color_from_hex('#e2695d')
+            color: get_color_from_hex('#6699FF')
 
 
-        Label:
+        Label:#时间数据在user_json里面，现在还不知道怎么引用的
             id: sleep_time_label
-            text: '23:00'
+
             font_size: '18sp'
             bold: True
             color: 0.8, 0.2, 0.2, 1
             size_hint_x: 0.5
             halign: 'left'
+            color: get_color_from_hex('#6699FF')
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 60
+        spacing: 10
+
+        Label:
+            text: '               备忘录'
+            font_size: '20sp'
+            font_name:'SIMYOU.TTF'
+            bold: True
+            size_hint_y: None
+            height: 40
+            halign: 'right'
             color: get_color_from_hex('#e2695d')
 
 
-    Label:
-        text: 'daily logs:'
-        font_size: '20sp'
-        bold: True
-        size_hint_y: None
-        height: 40
-        color: 0, 0, 0, 1
-        color: get_color_from_hex('#e2695d')
+        Label:
+            text: '☺                     '
+            font_size: '24sp'
+            font_name:'seguiemj.ttf'#  font_name: "fonts/NotoSansCJK-Regular.ttf"  # 思源黑体（支持Unicode全字符）
+            bold: True
+            size_hint_y: None
+            height: 40
+            halign: 'left'
+            color: get_color_from_hex('#e2695d')
+
 
 
     ScrollView:
@@ -119,50 +171,48 @@
 <ActivityItem>:
     orientation: 'vertical'
     size_hint_y: None
-    height: 80
+    height:
     padding: 10
     spacing: 5
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 0.1  # 几乎完全透明
+            rgba: 0.9, 0.9, 0.9, 0.3  # 更柔和的背景色
         Rectangle:
             pos: self.pos
             size: self.size
-
     Label:
-        text: root.location + ' ' + root.event_type
-        font_size: '16sp'
-        bold: True
-        size_hint_y: None
-        height: 25
-        color: 0, 0, 0, 1
-
-    Label:
-        text: 'time: ' + root.start_time + ' - ' + root.end_time
+        text: root.content
         font_size: '14sp'
-        size_hint_y: None
-        height: 20
-        color: 0.3, 0.3, 0.3, 1
+        font_name: 'simsun.ttc'
+        text_size: self.width, None
+        halign: 'left'
+        valign: 'middle'
+        color: get_color_from_hex('#e2695d')
 
-    Label:
-        text: 'duration: ' + str(root.duration) + '秒'
-        font_size: '14sp'
-        size_hint_y: None
-        height: 20
-        color: 0.5, 0.2, 0.8, 1
+
 
 <TrackingTab>:
-    orientation: 'vertical'
+    orientation: 'vertical'#垂直排列子控件
     padding: 10
     spacing: 10
+    canvas.before:
+        Rectangle:
+            pos:self.pos
+            size: self.size
+            source: 'assets/img.png'#scheduletabe的背景图
+            tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
+        Color:#调整后续的元素的颜色，透明度等
+            rgba: 1, 1, 1, 0.7  # 白色 + 50%透明度
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    Image:
+        source: 'assets/xingye.png'  # 图片路径
+        size_hint: None, None  # 禁用自动缩放
+        size: 200, 200  # 固定尺寸（像素）
+        pos_hint: {'center_x': 0.5, 'top': 0.9}  # 水平居中，顶部向下10%
 
-    Label:
-        text: 'Trace'
-        font_size: '24sp'
-        bold: True
-        size_hint_y: None
-        height: 50
-        color: 0, 0, 0, 1
+
 
     BoxLayout:
         orientation: 'horizontal'
@@ -171,15 +221,16 @@
         spacing: 10
 
         Label:
-            text: 'threshold (m/s):'
+            text: '设置速度阈值(m/s):'
+            font_name:'simsun.ttc'
             color: 0, 0, 0, 1
             size_hint_x: 0.5
 
         Slider:
             id: speed_slider
             min: 1
-            max: 10
-            value: 5
+            max: 15
+            value: 50
             size_hint_x: 0.5
 
     BoxLayout:
@@ -189,25 +240,28 @@
         spacing: 10
 
         Label:
-            text: 'speed now:'
+            text: '设置为:'
+            font_name:'simsun.ttc'
             color: 0, 0, 0, 1
             size_hint_x: 0.5
+            color: get_color_from_hex('#FFFFFF')
 
-        Label:
-            id: current_speed_label
-            text: '0.0 m/s'
+        Label:#目前这个显示的是阈值速度
+            id: threshold_speed_label
+            text: f'{speed_slider.value:.1f} m/s'  # 保留1位小数
+            color: get_color_from_hex('#FFFFFF')
             font_size: '16sp'
             bold: True
-            color: 0.2, 0.8, 0.2, 1
             size_hint_x: 0.5
 
     Label:
-        text: 'activities log:'
+        text: '今天你干了什么:'
+        font_name:'simsun.ttc'
         font_size: '18sp'
         bold: True
         size_hint_y: None
         height: 30
-        color: 0, 0, 0, 1
+        color: get_color_from_hex('#8076a3')
 
     ScrollView:
         BoxLayout:
@@ -215,7 +269,7 @@
             orientation: 'vertical'
             size_hint_y: None
             height: self.minimum_height
-            spacing: 5
+            spacing:5
 
 <LocationLogEntry>:
     orientation: 'vertical'
@@ -225,32 +279,34 @@
     spacing: 5
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 0.1  # 几乎完全透明
+            rgba: 0.969, 0.718, 0.773, 0 # rgb(247,183,197)，最后一个是透明度
         Rectangle:
             pos: self.pos
             size: self.size
-
+#遍历文件
     Label:
         text: root.location_text
-        font_size: '16sp'
+        font_size: '25sp'
+        font_name: 'simsun.ttc'  # 或系统存在的其他中文字体
         bold: True
         size_hint_y: None
         height: 25
-        color: 0, 0, 0, 1
+        color: get_color_from_hex('#8076a3')
 
     Label:
         text: root.duration_text
-        font_size: '14sp'
+        font_size: '8 sp'
+        font_name: 'simsun.ttc'
         size_hint_y: None
         height: 20
-        color: 0.3, 0.3, 0.3, 1
+        color: get_color_from_hex('#8076a3')
 
     Label:
         text: root.activity_text
-        font_size: '14sp'
+        font_size: '8 sp'
         size_hint_y: None
         height: 20
-        color: 0.5, 0.2, 0.8, 1
+        color: get_color_from_hex('#8076a3')
 
 <PersonalizationTab>:
     orientation: 'vertical'
