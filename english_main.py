@@ -183,18 +183,13 @@ class DailyTracker(TabbedPanel):
         if platform == 'android':
             try:
                 from utils.location_manager import LocationManager
-                from utils.alarm_reader import AlarmReader
-
                 # 创建位置管理器和闹钟读取器
                 self.location_manager = LocationManager(self)
-                self.alarm_reader = AlarmReader()
 
                 # 启动位置跟踪
                 self.location_manager.start_tracking()
                 print("Location tracking service started")
 
-                # 读取闹钟数据
-                self.update_alarm_info()
 
             except Exception as e:
                 print(f"Android service initialization failed: {e}")

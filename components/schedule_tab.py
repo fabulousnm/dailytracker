@@ -7,7 +7,6 @@ from kivy.utils import get_color_from_hex
 import datetime
 import json
 
-
 class ScheduleTab(BoxLayout):
     app = ObjectProperty(None)  # 添加 app 属性
 
