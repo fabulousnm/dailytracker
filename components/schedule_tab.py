@@ -95,6 +95,8 @@ class ScheduleTab(BoxLayout):
             self.activities.append(content)
             self._save_activities()
             self.display_activities()
+
+    '''
     def _save_activities(self):
         """保存活动数据到JSON文件"""
         try:
@@ -102,3 +104,4 @@ class ScheduleTab(BoxLayout):
                 json.dump({"logs": self.activities}, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"保存活动数据失败: {e}")
+'''

@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPS定位 + 免费实时天气与生活建议</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            margin: 20px 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .section-title {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2c3e50;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .section-title i {
+            font-size: 1.2em;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .data-item {
+            background: rgba(236, 240, 241, 0.5);
+            padding: 18px;
+            border-radius: 12px;
+            border-left: 4px solid #3498db;
+            transition: transform 0.2s;
+        }
+        .data-item:hover {
+            transform: translateY(-2px);
+            background: rgba(236, 240, 241, 0.8);
+        }
+        .label {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-bottom: 5px;
+            color: #7f8c8d;
+        }
+        .value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .weather-main {
+            text-align: center;
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-radius: 15px;
+            color: white;
+        }
+        .weather-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        .temp {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .weather-desc {
+            font-size: 1.3em;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        .button {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0, 176, 155, 0.3);
+        }
+        .button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .button-stop {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        }
+        #status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+        }
+        .status-success { background: rgba(46, 204, 113, 0.1) !important; border-color: #2ecc71 !important; }
+        .status-error { background: rgba(231, 76, 60, 0.1) !important; border-color: #e74c3c !important; }
+        .status-loading { background: rgba(241, 196, 15, 0.1) !important; border-color: #f1c40f !important; }
+        .status-warning { background: rgba(230, 126, 34, 0.1) !important; border-color: #e67e22 !important; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9em;
+        }
+
+        .location-header {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        /* 天气卡片颜色 */
+        .weather-card-sunny { background: linear-gradient(135deg, #FFD700, #FF8C00) !important; }
+        .weather-card-cloudy { background: linear-gradient(135deg, #B0B0B0, #808080) !important; }
+        .weather-card-rainy { background: linear-gradient(135deg, #4A90E2, #2C3E50) !important; }
+        .weather-card-snowy { background: linear-gradient(135deg, #E0F7FA, #80DEEA) !important; }
+        .weather-card-clear { background: linear-gradient(135deg, #36D1DC, #5B86E5) !important; }
+        .weather-card-default { background: linear-gradient(135deg, #74b9ff, #0984e3) !important; }
+
+        /* 空气质量指示器 */
+        .aqi-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .aqi-level {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            margin-right: 10px;
+        }
+        .aqi-good { background-color: #00e400; }
+        .aqi-moderate { background-color: #ffff00; color: #333; }
+        .aqi-unhealthy-sensitive { background-color: #ff7e00; }
+        .aqi-unhealthy { background-color: #ff0000; }
+        .aqi-very-unhealthy { background-color: #99004c; }
+        .aqi-hazardous { background-color: #7e0023; }
+
+        /* 建议卡片 */
+        .advice-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .advice-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 4px solid #3498db;
+        }
+        .advice-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .advice-content {
+            color: #555;
+            line-height: 1.5;
+        }
+        .recommendation-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(236, 240, 241, 0.3);
+            border-radius: 8px;
+        }
+        .recommendation-icon {
+            font-size: 1.2em;
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .data-grid, .advice-container { grid-template-columns: 1fr; }
+            .button-group { grid-template-columns: 1fr; }
+            .container { padding: 10px; }
+            .card { padding: 15px; }
+        }
+    </style>
+    <!-- 添加图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-map-marker-alt"></i> GPS实时定位与天气生活建议系统</h1>
+
+        <!-- 控制面板 -->
+        <div class="card">
+            <div class="section-title">
+                <i class="fas fa-rocket"></i> 控制面板
+            </div>
+            <div class="button-group">
+                <button class="button" onclick="startTracking()" id="startBtn">
+                    <i class="fas fa-play-circle"></i> 开始定位与获取天气
+                </button>
+                <button class="button button-stop" onclick="stopTracking()" id="stopBtn" disabled>
+                    <i class="fas fa-stop-circle"></i> 停止
+                </button>
+            </div>
+            <div id="status">就绪 - 点击开始按钮获取位置和天气信息</div>
+        </div>
+
+        <!-- 位置信息 -->
+        <div id="locationInfo" class="location-header" style="display:none;">
+            <i class="fas fa-location-dot"></i> 当前位置: <span id="locationName">正在获取位置名称...</span>
+        </div>
+
+        <!-- GPS定位信息 -->
+        <div class="card">
+            <div class="section-title">
+                <i class="fas fa-satellite"></i> GPS定位信息
+            </div>
+            <div class="data-grid">
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-longitude"></i> 经度</div>
+                    <div class="value" id="longitude">--</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-latitude"></i> 纬度</div>
+                    <div class="value" id="latitude">--</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-mountain"></i> 海拔</div>
+                    <div class="value" id="altitude">-- 米</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-tachometer-alt"></i> 速度</div>
+                    <div class="value" id="speed">-- 米/秒</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-bullseye"></i> 定位精度</div>
+                    <div class="value" id="accuracy">-- 米</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-clock"></i> 最后更新时间</div>
+                    <div class="value" id="timestamp">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 实时天气信息 -->
+        <div class="card">
+            <div class="section-title">
+                <i class="fas fa-cloud-sun"></i> 实时天气信息
+            </div>
+
+            <div class="weather-main" id="weatherCard">
+                <div class="weather-icon" id="weatherIcon">⛅</div>
+                <div class="temp" id="temperature">--°C</div>
+                <div class="weather-desc" id="weatherDescription">点击开始获取天气</div>
+                <div style="margin-top: 15px; font-size: 0.95em;" id="weatherLocation">
+                    <i class="fas fa-map-pin"></i> <span id="weatherLocationText">未知位置</span>
+                </div>
+            </div>
+
+            <div class="data-grid">
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-thermometer-half"></i> 体感温度</div>
+                    <div class="value" id="feelsLike">--°C</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-tint"></i> 湿度</div>
+                    <div class="value" id="humidity">--%</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-weight-hanging"></i> 气压</div>
+                    <div class="value" id="pressure">-- hPa</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-wind"></i> 风速</div>
+                    <div class="value" id="windSpeed">-- m/s</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-compass"></i> 风向</div>
+                    <div class="value" id="windDirection">--</div>
+                </div>
+                <div class="data-item">
+                    <div class="label"><i class="fas fa-eye"></i> 能见度</div>
+                    <div class="value" id="visibility">-- 公里</div>
+                </div>
+            </div>
+
+            <!-- 新增：空气质量信息 -->
+            <div style="margin-top: 25px;">
+                <div class="section-title">
+                    <i class="fas fa-wind"></i> 空气质量信息
+                </div>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="label"><i class="fas fa-smog"></i> AQI指数</div>
+                        <div class="value" id="aqiValue">--</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="label"><i class="fas fa-lungs"></i> PM2.5浓度</div>
+                        <div class="value" id="pm25Value">-- μg/m³</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="label"><i class="fas fa-cloud"></i> 空气质量等级</div>
+                        <div class="value" id="aqiLevel">--</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="label"><i class="fas fa-info-circle"></i> 主要污染物</div>
+                        <div class="value" id="mainPollutant">--</div>
+                    </div>
+                </div>
+                <div id="aqiIndicator" class="aqi-indicator" style="display:none;">
+                    <div class="aqi-level" id="aqiColorIndicator">良好</div>
+                    <div id="aqiDescription">空气质量良好，适合户外活动</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center; font-size: 0.85em; color: #7f8c8d;">
+                <i class="fas fa-sync-alt"></i> 天气最后更新: <span id="weatherUpdateTime">--</span>
+                <br>
+                <small>数据来源: 公共天气服务 • 位置基于GPS坐标估算</small>
+            </div>
+        </div>
+
+        <!-- 新增：生活建议模块 -->
+        <div class="card">
+            <div class="section-title">
+                <i class="fas fa-heartbeat"></i> 今日生活建议
+            </div>
+            <div class="advice-container">
+                <div class="advice-card">
+                    <div class="advice-title"><i class="fas fa-thermometer-half"></i> 健康提醒</div>
+                    <div class="advice-content">
+                        <div class="recommendation-item">
+                            <i class="fas fa-virus recommendation-icon"></i>
+                            <div>
+                                <strong>感冒风险:</strong> <span id="coldRisk">--</span>
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <i class="fas fa-tint recommendation-icon"></i>
+                            <div>
+                                <strong>补水建议:</strong> <span id="hydrationAdvice">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advice-card">
+                    <div class="advice-title"><i class="fas fa-umbrella"></i> 出行建议</div>
+                    <div class="advice-content">
+                        <div class="recommendation-item">
+                            <i class="fas fa-mask recommendation-icon"></i>
+                            <div>
+                                <strong>口罩建议:</strong> <span id="maskAdvice">--</span>
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <i class="fas fa-umbrella-beach recommendation-icon"></i>
+                            <div>
+                                <strong>雨具建议:</strong> <span id="umbrellaAdvice">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advice-card">
+                    <div class="advice-title"><i class="fas fa-running"></i> 运动推荐</div>
+                    <div class="advice-content">
+                        <div class="recommendation-item">
+                            <i class="fas fa-biking recommendation-icon"></i>
+                            <div>
+                                <strong>今日适合:</strong> <span id="sportAdvice">--</span>
+                            </div>
+                        </div>
+                        <div class="recommendation-item">
+                            <i class="fas fa-star recommendation-icon"></i>
+                            <div>
+                                <strong>观星指数:</strong> <span id="stargazingAdvice">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="advice-card">
+                    <div class="advice-title"><i class="fas fa-apple-alt"></i> 应季水果推荐</div>
+                    <div class="advice-content">
+                        <div id="fruitRecommendation">根据天气和季节推荐水果...</div>
+                    </div>
+                </div>
+
+                <div class="advice-card">
+                    <div class="advice-title"><i class="fas fa-seedling"></i> 花卉观赏</div>
+                    <div class="advice-content">
+                        <div id="flowerRecommendation">当前季节开放的花卉...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-footer">
+        GPS与天气生活建议系统 • 空气质量与生活建议 • 完全免费使用
+        <br>
+        <small>请确保已开启手机定位权限，并在室外获取最佳GPS精度</small>
+    </div>
+
+    <script>
+        // ==================== 全局变量 ====================
+        let watchId = null;
+        let lastPosition = null;
+        let weatherUpdateInterval = null;
+
+        // ==================== 工具函数 ====================
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = message;
+            statusEl.className = '';
+
+            switch(type) {
+                case 'success':
+                    statusEl.classList.add('status-success');
+                    break;
+                case 'error':
+                    statusEl.classList.add('status-error');
+                    break;
+                case 'loading':
+                    statusEl.innerHTML = `<span class="loading-spinner"></span>${message}`;
+                    statusEl.classList.add('status-loading');
+                    break;
+                case 'warning':
+                    statusEl.classList.add('status-warning');
+                    break;
+                default:
+                    // 保持默认样式
+            }
+        }
+
+        function getWeatherEmoji(weatherCode) {
+            const emojiMap = {
+                'clear': '☀️', 'sunny': '☀️',
+                'cloud': '☁️', 'cloudy': '☁️',
+                'rain': '🌧️', 'rainy': '🌧️',
+                'storm': '⛈️', 'thunderstorm': '⛈️',
+                'snow': '❄️', 'snowy': '❄️',
+                'fog': '🌫️', 'mist': '🌫️',
+                'wind': '💨', 'windy': '💨',
+                'default': '🌤️'
+            };
+
+            return emojiMap[weatherCode] || emojiMap.default;
+        }
+
+        function getWindDirection(degrees) {
+            if (degrees >= 337.5 || degrees < 22.5) return '北风';
+            if (degrees < 67.5) return '东北风';
+            if (degrees < 112.5) return '东风';
+            if (degrees < 157.5) return '东南风';
+            if (degrees < 202.5) return '南风';
+            if (degrees < 247.5) return '西南风';
+            if (degrees < 292.5) return '西风';
+            return '西北风';
+        }
+
+        // ==================== 空气质量API函数 ====================
+        async function fetchAirQualityData(lat, lon) {
+            try {
+                // 使用Open-Meteo空气质量API (完全免费，无需API Key)
+                const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,dust,aerosol_optical_depth`;
+
+                const response = await fetch(aqiUrl);
+                if (!response.ok) throw new Error('空气质量API请求失败');
+
+                const data = await response.json();
+
+                return {
+                    aqi: data.current.us_aqi || 0,
+                    pm25: data.current.pm2_5 || 0,
+                    pm10: data.current.pm10 || 0,
+                    co: data.current.carbon_monoxide || 0,
+                    no2: data.current.nitrogen_dioxide || 0,
+                    so2: data.current.sulphur_dioxide || 0,
+                    o3: data.current.ozone || 0,
+                    timestamp: new Date().toISOString()
+                };
+            } catch (error) {
+                console.warn('获取空气质量数据失败，使用估算数据:', error);
+                // 备用方案：基于天气和位置估算空气质量
+                return estimateAirQuality(lat, lon);
+            }
+        }
+
+        function estimateAirQuality(lat, lon) {
+            // 基于地理位置、季节和天气估算空气质量
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const hour = now.getHours();
+
+            // 基础AQI值
+            let baseAqi = 30;
+
+            // 城市区域通常空气质量较差
+            if (Math.abs(lat - 40) < 5 && Math.abs(lon - 116) < 5) baseAqi += 20; // 北京附近
+            if (Math.abs(lat - 31) < 5 && Math.abs(lon - 121) < 5) baseAqi += 15; // 上海附近
+
+            // 季节影响：冬季空气质量通常较差
+            if (month >= 11 || month <= 2) baseAqi += 15;
+
+            // 时间影响：早晚通勤时段空气质量较差
+            if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) baseAqi += 10;
+
+            // 随机波动
+            baseAqi += Math.random() * 20;
+
+            return {
+                aqi: Math.round(baseAqi),
+                pm25: Math.round(baseAqi * 0.7 + Math.random() * 15),
+                pm10: Math.round(baseAqi * 1.2 + Math.random() * 20),
+                co: (0.5 + Math.random() * 0.3).toFixed(1),
+                no2: (10 + Math.random() * 20).toFixed(1),
+                so2: (5 + Math.random() * 10).toFixed(1),
+                o3: (40 + Math.random() * 30).toFixed(1),
+                timestamp: now.toISOString(),
+                isEstimated: true
+            };
+        }
+
+        function getAQILevel(aqi) {
+            if (aqi <= 50) return { level: "优", color: "aqi-good", desc: "空气质量令人满意，基本无空气污染" };
+            if (aqi <= 100) return { level: "良", color: "aqi-moderate", desc: "空气质量可接受，但某些污染物可能对极少数异常敏感人群健康有较弱影响" };
+            if (aqi <= 150) return { level: "轻度污染", color: "aqi-unhealthy-sensitive", desc: "易感人群症状有轻度加剧，健康人群出现刺激症状" };
+            if (aqi <= 200) return { level: "中度污染", color: "aqi-unhealthy", desc: "进一步加剧易感人群症状，可能对健康人群心脏、呼吸系统有影响" };
+            if (aqi <= 300) return { level: "重度污染", color: "aqi-very-unhealthy", desc: "心脏病和肺病患者症状显著加剧，运动耐受力降低，健康人群普遍出现症状" };
+            return { level: "严重污染", color: "aqi-hazardous", desc: "健康人群运动耐受力降低，有明显强烈症状，提前出现某些疾病" };
+        }
+
+        function getMainPollutant(aqiData) {
+            const pollutants = [
+                { name: "PM2.5", value: aqiData.pm25 },
+                { name: "PM10", value: aqiData.pm10 },
+                { name: "臭氧", value: aqiData.o3 },
+                { name: "二氧化氮", value: aqiData.no2 },
+                { name: "二氧化硫", value: aqiData.so2 }
+            ];
+
+            pollutants.sort((a, b) => b.value - a.value);
+            return pollutants[0].name;
+        }
+
+        // ==================== 生活建议生成函数 ====================
+        function generateLifeAdvice(weatherData, aqiData, locationName) {
+            const temp = weatherData.temperature;
+            const humidity = weatherData.humidity;
+            const weatherDesc = weatherData.description.toLowerCase();
+            const windSpeed = weatherData.windSpeed;
+            const visibility = parseFloat(weatherData.visibility) || 10;
+            const aqi = aqiData.aqi;
+            const month = new Date().getMonth() + 1;
+
+            // 1. 感冒风险判断
+            let coldRisk = "低";
+            let coldReason = "";
+            if (temp < 10 && humidity > 70) {
+                coldRisk = "高";
+                coldReason = "低温高湿环境容易导致感冒";
+            } else if (temp < 5) {
+                coldRisk = "较高";
+                coldReason = "低温环境注意保暖";
+            } else if (temp > 25 && temp < 15 && humidity > 80) {
+                coldRisk = "中等";
+                coldReason = "温差大且湿度高，注意增减衣物";
+            } else {
+                coldReason = "天气条件较好，感冒风险低";
+            }
+
+            // 2. 补水建议
+            let hydrationAdvice = "";
+            if (temp > 28) {
+                hydrationAdvice = "气温较高，需要及时补充水分，建议每小时饮水200-300ml";
+            } else if (humidity < 40) {
+                hydrationAdvice = "空气干燥，注意皮肤保湿，多喝水";
+            } else if (humidity > 80) {
+                hydrationAdvice = "湿度较高，但运动后仍需适量补水";
+            } else {
+                hydrationAdvice = "温湿度适宜，保持正常饮水量即可";
+            }
+
+            // 3. 口罩建议
+            let maskAdvice = "";
+            if (aqi > 150) {
+                maskAdvice = "空气质量差，建议佩戴N95口罩外出";
+            } else if (aqi > 100) {
+                maskAdvice = "敏感人群建议佩戴口罩";
+            } else if (weatherDesc.includes('沙尘') || weatherDesc.includes('雾')) {
+                maskAdvice = "有沙尘/雾天气，建议佩戴口罩";
+            } else {
+                maskAdvice = "空气质量良好，一般无需佩戴口罩";
+            }
+
+            // 4. 雨具建议
+            let umbrellaAdvice = "";
+            if (weatherDesc.includes('雨') || weatherDesc.includes('雪')) {
+                umbrellaAdvice = "有降水，建议携带雨具";
+            } else if (weatherDesc.includes('雷') || weatherDesc.includes('storm')) {
+                umbrellaAdvice = "可能有雷雨，建议携带雨具并注意防雷";
+            } else if (weatherDesc.includes('阴') || weatherDesc.includes('cloud')) {
+                umbrellaAdvice = "多云天气，建议携带雨具备用";
+            } else {
+                umbrellaAdvice = "天气晴朗，无需雨具";
+            }
+
+            // 5. 运动建议
+            let sportAdvice = "";
+            if (aqi > 150) {
+                sportAdvice = "空气质量差，不建议户外运动";
+            } else if (weatherDesc.includes('雨') || weatherDesc.includes('雪')) {
+                sportAdvice = "雨雪天气，建议室内运动如瑜伽、健身操";
+            } else if (temp > 32) {
+                sportAdvice = "气温过高，建议清晨或傍晚进行散步、太极等轻度运动";
+            } else if (temp < 0) {
+                sportAdvice = "气温过低，建议室内运动或适当保暖后进行慢跑，运动前要注意热身，不要受伤了。";
+            } else if (windSpeed > 8) {
+                sportAdvice = "风较大，适合室内运动或避风处进行拉伸运动";
+            } else if (temp >= 15 && temp <= 25 && aqi <= 100) {
+                sportAdvice = "天气适宜，适合跑步、骑行、球类等户外运动。运动前要注意热身，不要受伤了。";
+            } else {
+                sportAdvice = "天气条件尚可，适合散步、慢跑等中等强度运动，运动前要注意热身，不要受伤了。";
+            }
+
+            // 6. 观星建议
+            let stargazingAdvice = "";
+            const isNight = new Date().getHours() >= 18 || new Date().getHours() <= 6;
+
+            if (!isNight) {
+                stargazingAdvice = "现在是白天，不适合观星哦~不过地球的另一端可以看得到";
+            } else if (weatherDesc.includes('晴') && !weatherDesc.includes('云')) {
+                if (visibility > 8 && aqi < 80) {
+                    stargazingAdvice = "★★★★★ 观星条件极佳，夜空清澈。悠闲的时候，躺在草坪上仰望星空，或许是生活中不错的调节呢";
+                } else {
+                    stargazingAdvice = "★★★☆☆ 晴天但能见度一般，可以观测主要星座。               “北斗七星，是在那个位置吗？”";
+                }
+            } else if (weatherDesc.includes('云') || weatherDesc.includes('阴')) {
+                stargazingAdvice = "★☆☆☆☆ 多云/阴天，不适合观星";
+            } else if (weatherDesc.includes('雨') || weatherDesc.includes('雪')) {
+                stargazingAdvice = "☆☆☆☆☆ 有降水，完全不适合观星";
+            } else {
+                stargazingAdvice = "★★☆☆☆ 天气条件一般，观星效果有限";
+            }
+
+            // 7. 应季水果推荐
+            const fruitRecommendation = getSeasonalFruits(month, temp, humidity);
+
+            // 8. 花卉推荐
+            const flowerRecommendation = getSeasonalFlowers(month, locationName);
+
+            return {
+                coldRisk: `${coldRisk} (${coldReason})`,
+                hydrationAdvice,
+                maskAdvice,
+                umbrellaAdvice,
+                sportAdvice,
+                stargazingAdvice,
+                fruitRecommendation,
+                flowerRecommendation
+            };
+        }
+
+        function getSeasonalFruits(month, temp, humidity) {
+            const seasonalFruits = {
+                1: { fruits: ["橙子", "柚子", "甘蔗"], reason: "冬季水果富含维C，增强免疫力" },
+                2: { fruits: ["草莓", "橙子", "甘蔗"], reason: "早春水果，补充维生素" },
+                3: { fruits: ["菠萝", "芒果", "草莓"], reason: "春季水果，帮助消化" },
+                4: { fruits: ["樱桃", "菠萝", "芒果"], reason: "春季水果，抗氧化" },
+                5: { fruits: ["荔枝", "樱桃", "杨梅"], reason: "初夏水果，补充能量" },
+                6: { fruits: ["西瓜", "荔枝", "杨梅"], reason: "夏季水果，清热解暑" },
+                7: { fruits: ["桃子", "西瓜", "葡萄"], reason: "盛夏水果，补充水分" },
+                8: { fruits: ["龙眼", "桃子", "葡萄"], reason: "夏末水果，滋补养身" },
+                9: { fruits: ["石榴", "梨", "枣"], reason: "秋季水果，润肺止咳" },
+                10: { fruits: ["柿子", "石榴", "苹果"], reason: "秋季水果，补充多种维生素" },
+                11: { fruits: ["柑橘", "柿子", "苹果"], reason: "深秋水果，增强抵抗力" },
+                12: { fruits: ["冬枣", "柑橘", "柚子"], reason: "冬季的水果，保暖防寒，能够增强免疫力" }
+            };
+
+            const monthData = seasonalFruits[month] || seasonalFruits[1];
+
+            let additionalAdvice = "";
+            if (temp > 30) additionalAdvice = "建议多吃西瓜、哈密瓜等含水量高的水果防暑";
+            if (humidity > 80) additionalAdvice = "湿气重，建议适量吃些橙子、柚子等柑橘类水果";
+            if (temp < 10) additionalAdvice = "天气冷，可将水果稍微加热后食用，直接吃可能有点冰~";
+
+            return `本月推荐: ${monthData.fruits.join("、")}。<br>${monthData.reason}${additionalAdvice ? `<br>${additionalAdvice}` : ''}`;
+        }
+
+        function getSeasonalFlowers(month, locationName) {
+            const seasonalFlowers = {
+                1: ["梅花", "水仙", "山茶花"],
+                2: ["迎春花", "桃花", "玉兰花"],
+                3: ["樱花", "油菜花", "杏花"],
+                4: ["牡丹", "杜鹃花", "海棠花"],
+                5: ["玫瑰", "月季", "芍药"],
+                6: ["荷花", "茉莉花", "绣球花"],
+                7: ["向日葵", "紫薇", "百合"],
+                8: ["桂花", "菊花", "牵牛花"],
+                9: ["菊花", "桂花", "大丽花"],
+                10: ["菊花", "芙蓉", "秋海棠"],
+                11: ["菊花", "茶梅", "一品红"],
+                12: ["腊梅", "仙客来", "君子兰"]
+            };
+
+            const flowers = seasonalFlowers[month] || seasonalFlowers[1];
+
+            let locationHint = "";
+            if (locationName.includes("北京")) locationHint = "北京植物园、颐和园是观赏的好去处";
+            if (locationName.includes("上海")) locationHint = "上海植物园、辰山植物园值得一游";
+            if (locationName.includes("广州")) locationHint = "华南植物园有丰富的花卉资源";
+
+            return `本月观赏: ${flowers.join("、")}正在开放,可以去交大植物园蔷薇园逛逛，说不定有意外惊喜哦~。${locationHint ? `<br>${locationHint}` : ''}`;
+        }
+
+        // ==================== 免费天气API函数 ====================
+        async function fetchFreeWeatherData(lat, lon) {
+            updateStatus('正在获取免费天气数据...', 'loading');
+
+            try {
+                const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code&hourly=temperature_2m&timezone=auto`;
+
+                const response = await fetch(openMeteoUrl);
+                if (!response.ok) throw new Error('天气API请求失败');
+
+                const data = await response.json();
+
+                const weatherInfo = {
+                    temperature: data.current.temperature_2m,
+                    feelsLike: data.current.apparent_temperature,
+                    humidity: data.current.relative_humidity_2m,
+                    pressure: data.current.pressure_msl,
+                    windSpeed: data.current.wind_speed_10m,
+                    windDirection: data.current.wind_direction_10m,
+                    weatherCode: data.current.weather_code,
+                    timestamp: new Date().toISOString()
+                };
+
+                const weatherDetails = interpretWeatherCode(weatherInfo.weatherCode);
+                weatherInfo.description = weatherDetails.description;
+                weatherInfo.icon = weatherDetails.icon;
+                weatherInfo.cardClass = weatherDetails.cardClass;
+
+                return weatherInfo;
+
+            } catch (error) {
+                console.error('获取天气失败:', error);
+                return getEstimatedWeather(lat, lon);
+            }
+        }
+
+        function interpretWeatherCode(code) {
+            const weatherMap = {
+                0: { description: '晴天', icon: '☀️', cardClass: 'weather-card-sunny' },
+                1: { description: '基本晴朗', icon: '🌤️', cardClass: 'weather-card-clear' },
+                2: { description: '局部多云', icon: '⛅', cardClass: 'weather-card-cloudy' },
+                3: { description: '多云', icon: '☁️', cardClass: 'weather-card-cloudy' },
+                45: { description: '雾', icon: '🌫️', cardClass: 'weather-card-cloudy' },
+                48: { description: '冻雾', icon: '🌫️', cardClass: 'weather-card-snowy' },
+                51: { description: '小雨', icon: '🌦️', cardClass: 'weather-card-rainy' },
+                53: { description: '中雨', icon: '🌧️', cardClass: 'weather-card-rainy' },
+                55: { description: '大雨', icon: '🌧️', cardClass: 'weather-card-rainy' },
+                61: { description: '小雨', icon: '🌦️', cardClass: 'weather-card-rainy' },
+                63: { description: '中雨', icon: '🌧️', cardClass: 'weather-card-rainy' },
+                65: { description: '大雨', icon: '🌧️', cardClass: 'weather-card-rainy' },
+                71: { description: '小雪', icon: '🌨️', cardClass: 'weather-card-snowy' },
+                73: { description: '中雪', icon: '❄️', cardClass: 'weather-card-snowy' },
+                75: { description: '大雪', icon: '❄️', cardClass: 'weather-card-snowy' },
+                80: { description: '阵雨', icon: '🌦️', cardClass: 'weather-card-rainy' },
+                81: { description: '强阵雨', icon: '⛈️', cardClass: 'weather-card-rainy' },
+                82: { description: '暴雨', icon: '⛈️', cardClass: 'weather-card-rainy' },
+                95: { description: '雷暴', icon: '⛈️', cardClass: 'weather-card-rainy' },
+                99: { description: '强雷暴', icon: '⛈️', cardClass: 'weather-card-rainy' }
+            };
+
+            return weatherMap[code] || {
+                description: '未知天气',
+                icon: '🌤️',
+                cardClass: 'weather-card-default'
+            };
+        }
+
+        function getEstimatedWeather(lat, lon) {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const hour = now.getHours();
+
+            let baseTemp = 20 - Math.abs(lat - 30) * 0.5;
+
+            if (month >= 12 || month <= 2) baseTemp -= 10;
+            if (month >= 6 && month <= 8) baseTemp += 10;
+            if (hour >= 20 || hour <= 6) baseTemp -= 5;
+
+            const temp = Math.round(baseTemp + (Math.random() * 6 - 3));
+
+            const weatherTypes = [
+                { desc: '晴朗', icon: '☀️', class: 'weather-card-sunny', humidity: 40 },
+                { desc: '多云', icon: '☁️', class: 'weather-card-cloudy', humidity: 60 },
+                { desc: '局部多云', icon: '⛅', class: 'weather-card-clear', humidity: 50 }
+            ];
+
+            const weather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+
+            return {
+                temperature: temp,
+                feelsLike: temp - (weather.humidity > 60 ? 2 : 0),
+                humidity: weather.humidity + Math.round(Math.random() * 20),
+                pressure: 1013 + Math.round(Math.random() * 20 - 10),
+                windSpeed: (Math.random() * 5).toFixed(1),
+                windDirection: Math.round(Math.random() * 360),
+                description: weather.desc,
+                icon: weather.icon,
+                cardClass: weather.class,
+                timestamp: now.toISOString(),
+                isEstimated: true
+            };
+        }
+
+        // ==================== 位置名称查询 ====================
+        async function fetchLocationName(lat, lon) {
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`;
+
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'GPSWeatherApp/1.0'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const locationName = data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+
+                    document.getElementById('locationName').textContent = locationName;
+                    document.getElementById('weatherLocationText').textContent =
+                        locationName.split(',')[0];
+                    document.getElementById('locationInfo').style.display = 'block';
+
+                    return locationName;
+                }
+            } catch (error) {
+                console.warn('无法获取位置名称:', error);
+                const coordName = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                document.getElementById('locationName').textContent = `坐标: ${coordName}`;
+                document.getElementById('weatherLocationText').textContent = `坐标 ${coordName}`;
+                document.getElementById('locationInfo').style.display = 'block';
+                return coordName;
+            }
+        }
+
+        // ==================== 显示天气和空气质量数据 ====================
+        async function displayWeatherAndAirQuality(lat, lon, weather, locationName) {
+            // 获取空气质量数据
+            const aqiData = await fetchAirQualityData(lat, lon);
+
+            // 显示天气数据
+            displayWeatherData(weather);
+
+            // 显示空气质量数据
+            displayAirQualityData(aqiData);
+
+            // 生成并显示生活建议
+            const advice = generateLifeAdvice(weather, aqiData, locationName);
+            displayLifeAdvice(advice);
+        }
+
+        function displayWeatherData(weather) {
+            document.getElementById('weatherIcon').textContent = weather.icon;
+            document.getElementById('temperature').textContent =
+                Math.round(weather.temperature) + '°C';
+            document.getElementById('weatherDescription').textContent = weather.description;
+
+            const weatherCard = document.getElementById('weatherCard');
+            weatherCard.className = 'weather-main ' + weather.cardClass;
+
+            document.getElementById('feelsLike').textContent =
+                Math.round(weather.feelsLike) + '°C';
+            document.getElementById('humidity').textContent = weather.humidity + '%';
+            document.getElementById('pressure').textContent = weather.pressure + ' hPa';
+            document.getElementById('windSpeed').textContent = weather.windSpeed + ' m/s';
+            document.getElementById('windDirection').textContent =
+                getWindDirection(weather.windDirection) + ` (${weather.windDirection}°)`;
+            document.getElementById('visibility').textContent =
+                (10 - weather.humidity / 20).toFixed(1) + ' 公里';
+
+            const updateTime = new Date().toLocaleTimeString();
+            document.getElementById('weatherUpdateTime').textContent = updateTime;
+
+            if (weather.isEstimated) {
+                document.getElementById('weatherLocationText').innerHTML +=
+                    ' <span style="color:#e74c3c;font-size:0.8em;">(估算天气)</span>';
+            }
+        }
+
+        function displayAirQualityData(aqiData) {
+            document.getElementById('aqiValue').textContent = aqiData.aqi;
+            document.getElementById('pm25Value').textContent = aqiData.pm25.toFixed(1) + ' μg/m³';
+
+            const aqiLevel = getAQILevel(aqiData.aqi);
+            document.getElementById('aqiLevel').textContent = aqiLevel.level;
+
+            const mainPollutant = getMainPollutant(aqiData);
+            document.getElementById('mainPollutant').textContent = mainPollutant;
+
+            // 显示AQI指示器
+            const aqiIndicator = document.getElementById('aqiIndicator');
+            const aqiColorIndicator = document.getElementById('aqiColorIndicator');
+            const aqiDescription = document.getElementById('aqiDescription');
+
+            aqiColorIndicator.textContent = aqiLevel.level;
+            aqiColorIndicator.className = `aqi-level ${aqiLevel.color}`;
+            aqiDescription.textContent = aqiLevel.desc;
+            aqiIndicator.style.display = 'flex';
+
+            if (aqiData.isEstimated) {
+                aqiDescription.textContent += ' (基于估算数据)';
+            }
+        }
+
+        function displayLifeAdvice(advice) {
+            document.getElementById('coldRisk').textContent = advice.coldRisk;
+            document.getElementById('hydrationAdvice').textContent = advice.hydrationAdvice;
+            document.getElementById('maskAdvice').textContent = advice.maskAdvice;
+            document.getElementById('umbrellaAdvice').textContent = advice.umbrellaAdvice;
+            document.getElementById('sportAdvice').textContent = advice.sportAdvice;
+            document.getElementById('stargazingAdvice').textContent = advice.stargazingAdvice;
+            document.getElementById('fruitRecommendation').innerHTML = advice.fruitRecommendation;
+            document.getElementById('flowerRecommendation').innerHTML = advice.flowerRecommendation;
+        }
+
+        // ==================== 主要GPS函数 ====================
+        function startTracking() {
+            if (watchId) return;
+
+            updateStatus('请求定位权限中...', 'loading');
+
+            if (!navigator.geolocation) {
+                updateStatus('错误: 您的浏览器不支持定位功能', 'error');
+                return;
+            }
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            watchId = navigator.geolocation.watchPosition(
+                onPositionSuccess,
+                onPositionError,
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 15000
+                }
+            );
+
+            updateStatus('正在获取初始位置...', 'loading');
+        }
+
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            if (weatherUpdateInterval) {
+                clearInterval(weatherUpdateInterval);
+                weatherUpdateInterval = null;
+            }
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            updateStatus('已停止追踪', 'stopped');
+        }
+
+        async function onPositionSuccess(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            lastPosition = { lat, lon };
+
+            document.getElementById('latitude').textContent = lat.toFixed(6);
+            document.getElementById('longitude').textContent = lon.toFixed(6);
+            document.getElementById('altitude').textContent =
+                position.coords.altitude ? position.coords.altitude.toFixed(1) + ' 米' : '--';
+            document.getElementById('speed').textContent =
+                position.coords.speed ? position.coords.speed.toFixed(2) + ' 米/秒' : '0.00 米/秒';
+            document.getElementById('accuracy').textContent = position.coords.accuracy.toFixed(1) + ' 米';
+            document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
+
+            updateStatus('定位成功，正在获取天气和空气质量信息...', 'success');
+
+            const locationName = await fetchLocationName(lat, lon);
+            const weatherData = await fetchFreeWeatherData(lat, lon);
+
+            if (weatherData) {
+                await displayWeatherAndAirQuality(lat, lon, weatherData, locationName);
+            }
+
+            if (!weatherUpdateInterval) {
+                weatherUpdateInterval = setInterval(async () => {
+                    if (lastPosition) {
+                        const newWeather = await fetchFreeWeatherData(lastPosition.lat, lastPosition.lon);
+                        const newLocationName = document.getElementById('locationName').textContent;
+                        if (newWeather) {
+                            await displayWeatherAndAirQuality(lastPosition.lat, lastPosition.lon, newWeather, newLocationName);
+                        }
+                    }
+                }, 10 * 60 * 1000);
+            }
+        }
+
+        function onPositionError(error) {
+            let message = '定位失败: ';
+            switch(error.code) {
+                case 1: message += '用户拒绝了位置权限'; break;
+                case 2: message += '无法获取位置信息'; break;
+                case 3: message += '定位请求超时'; break;
+                default: message += '未知错误';
+            }
+            updateStatus(message, 'error');
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        }
+
+        // ==================== 页面初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('系统就绪，点击"开始定位与获取天气"按钮启动', 'info');
+
+            if (!navigator.geolocation) {
+                updateStatus('警告: 您的设备或浏览器不支持GPS定位', 'warning');
+                document.getElementById('startBtn').disabled = true;
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    if (!document.getElementById('startBtn').disabled) {
+                        startTracking();
+                    }
+                }
+                if (e.key === 'Escape') {
+                    if (!document.getElementById('stopBtn').disabled) {
+                        stopTracking();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

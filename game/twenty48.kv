@@ -1,0 +1,237 @@
+#:kivy 1.11.1
+#:import rgb kivy.utils.get_color_from_hex
+
+<Tile>:
+    size_hint: None, None
+    size: 80, 80
+    font_name: 'simsun.ttc'
+    bold: True
+    color: self.text_color
+    background_color: [0, 0, 0, 0]
+    background_normal: ''
+    background_down: ''
+
+    canvas.before:
+        # 背景矩形
+        Color:
+            rgba: self.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]
+
+        # 新格子或合并格子的高亮效果
+        Color:
+            rgba: [1, 1, 1, 0.3] if self.is_new or self.is_merged else [0, 0, 0, 0]
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]
+
+        # 边框效果
+        Color:
+            rgba: [0.47, 0.43, 0.39, 0.2]
+        Line:
+            rounded_rectangle: [self.x, self.y, self.width, self.height, 8]
+            width: 1.5
+
+    canvas.after:
+        # 点击效果
+        Color:
+            rgba: [1, 1, 1, 0.1] if self.state == 'down' else [0, 0, 0, 0]
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]
+
+<GameBoard>:
+    canvas.before:
+        # 网格背景
+        Color:
+            rgba: rgb('#bbada0')
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10,]
+
+<GameGrid>:
+    canvas.before:
+        # 主背景
+        Color:
+            rgba: rgb('#faf8ef')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+        # 装饰性元素
+        Color:
+            rgba: rgb('#bbada0')
+        RoundedRectangle:
+            pos: self.x + self.width * 0.1, self.y + self.height * 0.8
+            size: self.width * 0.8, self.height * 0.1
+            radius: [15,]
+
+    # 标题栏
+    BoxLayout:
+        size_hint: 1, 0.2
+        spacing: 10
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: 0.5, 1
+
+            Label:
+                text: '2048'
+                font_size: '60sp'
+                font_name: 'simsun.ttc'
+                bold: True
+                color: rgb('#776e65')
+                size_hint_y: 0.7
+
+            Label:
+                text: '合并数字，创造2048！'
+                font_size: '14sp'
+                font_name: 'simsun.ttc'
+                color: rgb('#776e65')
+                size_hint_y: 0.3
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: 0.5, 1
+            spacing: 10
+
+            # 分数显示
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 0.5, 1
+
+                canvas.before:
+                    Color:
+                        rgba: rgb('#bbada0')
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [6,]
+
+                Label:
+                    text: '分数'
+                    font_size: '14sp'
+                    font_name: 'simsun.ttc'
+                    color: rgb('#eee4da')
+                    size_hint_y: 0.4
+                    pos_hint: {'center_x': 0.5}
+
+                Label:
+                    id: score_label
+                    text: str(root.score)
+                    font_size: '28sp'
+                    font_name: 'simsun.ttc'
+                    bold: True
+                    color: (1, 1, 1, 1)
+                    size_hint_y: 0.6
+
+            # 最高分显示
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 0.5, 1
+
+                canvas.before:
+                    Color:
+                        rgba: rgb('#bbada0')
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [6,]
+
+                Label:
+                    text: '最高分'
+                    font_size: '14sp'
+                    font_name: 'simsun.ttc'
+                    color: rgb('#eee4da')
+                    size_hint_y: 0.4
+                    pos_hint: {'center_x': 0.5}
+
+                Label:
+                    id: best_score_label
+                    text: str(root.best_score)
+                    font_size: '28sp'
+                    font_name: 'simsun.ttc'
+                    bold: True
+                    color: (1, 1, 1, 1)
+                    size_hint_y: 0.6
+
+    # 游戏说明
+    BoxLayout:
+        size_hint: 1, 0.1
+
+        Label:
+            text: '使用方向键或WASD移动格子'
+            font_size: '14sp'
+            font_name: 'simsun.ttc'
+            color: rgb('#776e65')
+            halign: 'center'
+
+    # 游戏网格区域
+    BoxLayout:
+        size_hint: 1, 0.55
+        padding: [0, 10, 0, 10]
+
+        GameBoard:
+            id: game_board
+            size_hint: None, None
+            size: 370, 370
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+    # 控制按钮
+    BoxLayout:
+        size_hint: 1, 0.1
+        spacing: 20
+
+        Button:
+            text: '重新开始'
+            font_size: '18sp'
+            font_name: 'simsun.ttc'
+            bold: True
+            background_color: rgb('#8f7a66')
+            background_normal: ''
+            color: (1, 1, 1, 1)
+            on_press: root.reset_game()
+
+            canvas.before:
+                Color:
+                    rgba: rgb('#8f7a66')
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [8,]
+
+        Button:
+            text: '操作说明'
+            font_size: '18sp'
+            font_name: 'simsun.ttc'
+            bold: True
+            background_color: rgb('#f2b179')
+            background_normal: ''
+            color: (1, 1, 1, 1)
+            on_press: app.show_instructions()
+
+            canvas.before:
+                Color:
+                    rgba: rgb('#f2b179')
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [8,]
+
+    # 游戏状态提示
+    BoxLayout:
+        size_hint: 1, 0.05
+
+        Label:
+            id: game_status_label
+            text: '游戏进行中...' if not root.game_over else '游戏结束！'
+            font_size: '18sp'
+            font_name: 'simsun.ttc'
+            color: rgb('#776e65') if not root.game_over else rgb('#f65e3b')
+            bold: True if root.game_over else False
+            halign: 'center'

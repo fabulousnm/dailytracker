@@ -1,0 +1,34 @@
+{
+  "logs": [
+    {
+      "location": "叙利亚",
+      "duration": "持续时间: 5400 sed",
+      "description": "at class"
+    },
+    {
+      "location": "俄罗斯",
+      "duration": "持续时间: 7200 sed",
+      "description": "studying"
+    },
+     {
+      "location": "埃塞俄比亚",
+      "duration": "持续时间: 7200 sed",
+      "description": "studying"
+    },
+     {
+      "location": "澳大利亚",
+      "duration": "持续时间: 7200 sed",
+      "description": "studying"
+    },
+     {
+      "location": "库里木",
+      "duration": "持续时间: 7200 sed",
+      "description": "studying"
+    },
+     {
+      "location": "黑海",
+      "duration": "持续时间: 7200 sed",
+      "description": "studying"
+    }
+  ]
+}

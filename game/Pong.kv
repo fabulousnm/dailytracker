@@ -1,0 +1,211 @@
+#:kivy 1.11.1
+#:import rgb kivy.utils.get_color_from_hex
+
+<GameButton@Button>:
+    font_size: 24
+    background_color: (0.2, 0.6, 1, 1)
+    background_normal: ''
+    color: (1, 1, 1, 1)
+    size_hint_y: None
+    height: 60
+
+<PongBall>:
+    size: 50, 50
+    canvas:
+        # 使用渐变色绘制球
+        Color:
+            rgba: rgb('#FF5722')  # 橙色
+        Ellipse:
+            pos: self.pos
+            size: self.size
+        # 添加高光效果
+        Color:
+            rgba: 1, 1, 1, 0.3
+        Ellipse:
+            pos: self.x + 10, self.y + self.height - 20
+            size: 15, 15
+
+<PongPaddle>:
+    size: 30, 180
+    canvas:
+        # 球拍主体 - 使用paddle_color属性
+        Color:
+            rgba: self.paddle_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10, 10, 10, 10]
+
+        # 球拍边框
+        Color:
+            rgba: 1, 1, 1, 0.8
+        Line:
+            rounded_rectangle: [self.x, self.y, self.width, self.height, 10]
+            width: 2
+
+        # 球拍手柄
+        Color:
+            rgba: self.paddle_color[0]*0.8, self.paddle_color[1]*0.8, self.paddle_color[2]*0.8, 1
+        Rectangle:
+            pos: self.x, self.y - 20
+            size: self.width, 20
+
+<PongGame>:
+    ball: pong_ball
+    player1: player_left
+    player2: player_right
+
+    canvas.before:
+        # 背景 - 深色渐变
+        Color:
+            rgba: rgb('#0D47A1')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+        # 背景网格线
+        Color:
+            rgba: 1, 1, 1, 0.1
+        Line:
+            points: self.center_x, self.y, self.center_x, self.top
+            width: 2
+
+        # 中心圆圈
+        Color:
+            rgba: 1, 1, 1, 0.2
+        Line:
+            circle: (self.center_x, self.center_y, 100)
+            width: 1.5
+
+        # 底部装饰
+        Color:
+            rgba: rgb('#1565C0')
+        Rectangle:
+            pos: self.x, self.y
+            size: self.width, 10
+
+    # 比分显示
+    BoxLayout:
+        size_hint: 1, None
+        height: 100
+        pos_hint: {'top': 1}
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 5
+
+            Label:
+                text: '玩家1'
+                font_name:'simsun.ttc'
+                font_size: 24
+                color: rgb('#2196F3')
+                bold: True
+
+            Label:
+                id: score1
+                text: str(root.player1.score)
+                font_size: 60
+                color: rgb('#2196F3')
+                bold: True
+
+        BoxLayout:  # 中间的分隔线
+            orientation: 'vertical'
+
+            Label:
+                text: '-'
+                font_size: 40
+                color: (1, 1, 1, 0.5)
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 5
+
+            Label:
+                text: '玩家2'
+                font_name:'simsun.ttc'
+                font_size: 24
+                color: rgb('#FF5722')
+                bold: True
+
+            Label:
+                id: score2
+                text: str(root.player2.score)
+                font_size: 60
+                color: rgb('#FF5722')
+                bold: True
+
+    # 获胜提示（隐藏状态）
+    Label:
+        id: win_label
+        text: ''
+        font_size: 60
+        color: (1, 1, 1, 1)
+        bold: True
+        opacity: 0
+        pos_hint: {'center_x': 0.5, 'center_y': 0.6}
+        size_hint: None, None
+        size: self.texture_size[0] + 20, self.texture_size[1] + 20
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 0.7
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [10,]
+
+    # 游戏球和球拍
+    PongBall:
+        id: pong_ball
+        center: self.parent.center
+
+    PongPaddle:
+        id: player_left
+        x: root.x + 20
+        center_y: root.center_y
+
+    PongPaddle:
+        id: player_right
+        x: root.width - self.width - 20
+        center_y: root.center_y
+
+    # 暂停按钮
+    Button:
+        text: 'II'
+        font_size: 20
+        size_hint: None, None
+        size: 50, 50
+        pos_hint: {'right': 0.95, 'top': 0.95}
+        background_color: (0, 0, 0, 0.5)
+        background_normal: ''
+        color: (1, 1, 1, 1)
+        on_press: root.show_pause_menu()
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 0.3
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [25,]
+
+# 游戏菜单样式
+<GameMenu>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 40
+        spacing: 20
+
+        Label:
+            id: title
+            text: '乒乓球游戏'
+            font_name:'simsun.ttc'
+            font_size: 40
+            color: (1, 1, 1, 1)
+            bold: True
+            size_hint_y: None
+            height: 80
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 15
+            size_hint_y: 0.8
+            # 按钮将通过Python代码动态添加

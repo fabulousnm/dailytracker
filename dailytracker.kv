@@ -13,8 +13,42 @@
         Rectangle:
             texture: self.texture
             pos: self.x-1, self.y-1  # 描边偏移（1像素）
-            size: self.texture_size[0]+2, self.texture_size[1]+2
-<DailyTracker>:
+<HTMLStyleButton@Button>:
+    font_name: 'simsun.ttc'
+    font_size: '16sp'
+    bold: True
+    size_hint_y: None
+    height: 52
+    background_color: (0, 0, 0, 0)
+    background_normal: ''
+    background_down: ''
+    color: (1, 1, 1, 1)
+
+    canvas.before:
+        # 主背景 - 比原版更朴素的蓝色
+        Color:
+            rgba: (0.25, 0.65, 0.85, 0.2) if self.state == 'normal' else (0.2, 0.6, 0.8, 0.2)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [6]
+
+        # 高光条
+        Color:
+            rgba: (1, 1, 1, 0.25)
+        RoundedRectangle:
+            pos: (self.x + 1, self.y + self.height - 3)
+            size: (self.width - 2, 2)
+            radius: [1]
+
+        # 按下时的内部阴影
+        Color:
+            rgba: (0, 0, 0, 0.15) if self.state == 'down' else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: (self.x + 1, self.y + 1)
+            size: (self.width - 2, self.height - 2)
+            radius: [5]
+<DailyTracker>:#第一主界面
 
     tab_width: root.width / 3
     TabbedPanelItem:
@@ -60,7 +94,7 @@
         Rectangle:
             pos:self.pos
             size: self.size
-            source: 'assets/img.png'#scheduletabe的背景图
+            source: 'assets/images/img.png'#scheduletabe的背景图
             tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
         Color:#调整后续的元素的颜色，透明度等
             rgba: 1, 1, 1, 0.5  # 白色 + 50%透明度
@@ -86,7 +120,7 @@
         spacing: 10
 
         Label:
-            text: '        苏醒时刻:'
+            text: '        门扉时:'
             bold:True
             font_name:'SIMYOU.TTF'
             font_size: '24sp'
@@ -112,7 +146,7 @@
         spacing: 10
 
         Label:
-            text: '      安眠处:'
+            text: '      黎明时:'
             font_size: '24sp'
             font_name:'SIMYOU.TTF'
             color: 0, 0, 0, 1
@@ -138,13 +172,13 @@
         spacing: 10
 
         Label:
-            text: '               备忘录'
+            text: '               备忘录'#这是备忘录
             font_size: '20sp'
             font_name:'SIMYOU.TTF'
             bold: True
             size_hint_y: None
             height: 40
-            halign: 'right'
+            halign: 'right'#左边的排版
             color: get_color_from_hex('#e2695d')
 
 
@@ -160,7 +194,7 @@
 
 
 
-    ScrollView:
+    ScrollView:#备忘录的滑动效果
         BoxLayout:
             id: activity_container
             orientation: 'vertical'
@@ -190,7 +224,7 @@
         color: get_color_from_hex('#e2695d')
 
 
-
+#轨迹
 <TrackingTab>:
     orientation: 'vertical'#垂直排列子控件
     padding: 10
@@ -199,7 +233,7 @@
         Rectangle:
             pos:self.pos
             size: self.size
-            source: 'assets/img.png'#scheduletabe的背景图
+            source: 'assets/images/img.png'#scheduletabe的背景图
             tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
         Color:#调整后续的元素的颜色，透明度等
             rgba: 1, 1, 1, 0.7  # 白色 + 50%透明度
@@ -207,7 +241,7 @@
             pos: self.pos
             size: self.size
     Image:
-        source: 'assets/xingye.png'  # 图片路径
+        source: 'assets/xingye.png'  # 图片路径，这里可以实时刷新轨迹图？
         size_hint: None, None  # 禁用自动缩放
         size: 200, 200  # 固定尺寸（像素）
         pos_hint: {'center_x': 0.5, 'top': 0.9}  # 水平居中，顶部向下10%
@@ -253,9 +287,15 @@
             font_size: '16sp'
             bold: True
             size_hint_x: 0.5
+         # 在TrackingTab的布局中添加按钮
 
+
+    HTMLStyleButton:
+        text: '月落乌啼霜满天，江枫渔火对愁眠'
+        font_name:'simsun.ttc'
+        on_press: root.open_local_html(self)
     Label:
-        text: '今天你干了什么:'
+        text: '今天你的路径:'    #修改请见trackingtab 133行
         font_name:'simsun.ttc'
         font_size: '18sp'
         bold: True
@@ -283,7 +323,7 @@
         Rectangle:
             pos: self.pos
             size: self.size
-#遍历文件
+#遍历文件中的数据，数据在activitytime中
     Label:
         text: root.location_text
         font_size: '25sp'
@@ -309,137 +349,90 @@
         color: get_color_from_hex('#8076a3')
 
 <PersonalizationTab>:
+    canvas.before:
+        Rectangle:
+            pos:self.pos
+            size: self.size
+            source: 'assets/images/img.png'#scheduletabe的背景图
+            tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
+        Color:#调整后续的元素的颜色，透明度等
+            rgba: 1, 1, 1, 0.5  # 白色 + 50%透明度
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
     orientation: 'vertical'
     padding: 20
     spacing: 15
-
-    # 添加调试主题按钮
-    Label:
-        text: 'Debug Theme Buttons:'
-        font_size: '16sp'
+    Button:
+        id: game_button
+        text: "▶ 开始乒乓球游戏"
+        font_name: 'simsun.ttc'
+        size_hint: (1, 0.12)
+        font_size: '20sp'
         bold: True
-        size_hint_y: None
-        height: 30
+        background_color: (0, 0, 0, 0)  # 透明背景
+        background_normal: ''
+        color: (1, 1, 1, 1)
+        on_press: root.run_pingpong_game()
 
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 50
-        spacing: 5
+        canvas.before:
+            # 渐变背景
+            Color:
+                rgba: (0.2, 0.5, 0.9, 1)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [15,]
 
-        Button:
-            text: 'SUNNY'
-            background_color: 1, 0.84, 0, 1  # 黄色
-            on_press: root.change_theme('sunny theme')
+        # 按钮发光效果
+            Color:
+                rgba: (0.4, 0.7, 1, 0.3)
+            Line:
+                rounded_rectangle: [self.x, self.y, self.width, self.height, 15]
+                width: 1.5
 
-        Button:
-            text: 'CLOUDY'
-            background_color: 0.5, 0.5, 0.5, 1  # 灰色
-            on_press: root.change_theme('cloudy theme')
-
-        Button:
-            text: 'RAINY'
-            background_color: 0, 0, 1, 1  # 蓝色
-            on_press: root.change_theme('rainy theme')
-
-    # 原有的其他内容保持不变...
-    Label:
-        text: 'personalization setting'
-        font_size: '24sp'
+        canvas.after:
+        # 按钮按下效果
+            Color:
+                rgba: (1, 1, 1, 0.1) if self.state == 'normal' else (1, 1, 1, 0.3)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [15,]
+    Button:
+        id: game_button
+        text: "▶ 开始2048游戏"
+        font_name: 'simsun.ttc'
+        size_hint: (1, 0.12)
+        font_size: '20sp'
         bold: True
-        size_hint_y: None
-        height: 50
+        background_color: (0, 0, 0, 0)  # 透明背景
+        background_normal: ''
+        color: (1, 1, 1, 1)
+        on_press: root.run_twenty48_game()
 
-    Label:
-        text: 'personalization setting'
-        font_size: '24sp'
-        bold: True
-        size_hint_y: None
-        height: 50
+        canvas.before:
+            # 渐变背景
+            Color:
+                rgba: (0.2, 0.5, 0.9, 1)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [15,]
 
+        # 按钮发光效果
+            Color:
+                rgba: (0.4, 0.7, 1, 0.3)
+            Line:
+                rounded_rectangle: [self.x, self.y, self.width, self.height, 15]
+                width: 1.5
 
-    Label:
-        text: 'SJTU - Manage your day!'
-        font_size: '16sp'
-        italic: True
-        size_hint_y: None
-        height: 40
-
-
-    Label:
-        text: 'main color setting:'
-        font_size: '18sp'
-        bold: True
-        size_hint_y: None
-        height: 30
-
-
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 50
-        spacing: 10
-
-        Label:
-            text: 'choice theme:'
-            font_size: '16sp'
-
-            size_hint_x: 0.4
-
-        Spinner:
-            id: theme_spinner
-            text: 'sunny theme'
-            values: ['sunny theme', 'cloudy theme', 'rainy theme']
-            size_hint_x: 0.6
-            on_text: root.change_theme(self.text)
-
-    Label:
-        text: 'module color customization:'
-        font_size: '18sp'
-        bold: True
-        size_hint_y: None
-        height: 30
-
-
-    GridLayout:
-        cols: 2
-        size_hint_y: None
-        height: 150
-        spacing: 10
-        padding: 10
-
-        Button:
-            text: 'routine module'
-            background_color: 0.2, 0.6, 0.8, 1
-            on_press: root.customize_color('schedule')
-
-        Button:
-            text: 'tracing module'
-            background_color: 0.2, 0.8, 0.6, 1
-            on_press: root.customize_color('tracking')
-
-        Button:
-            text: 'personalization module'
-            background_color: 0.8, 0.6, 0.2, 1
-            on_press: root.customize_color('personalization')
-
-        Button:
-            text: 'resetting all the color'
-            background_color: 0.8, 0.4, 0.4, 1
-            on_press: root.app.reset_settings()
-
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 60
-        spacing: 10
-
-        Button:
-            text: 'save settings'
-            background_color: 0.4, 0.7, 0.4, 1
-            on_press: root.app.save_settings()
-
-        Button:
-            text: 'set as default'
-            background_color: 0.8, 0.4, 0.4, 1
-            on_press: root.app.reset_settings()
+        canvas.after:
+        # 按钮按下效果
+            Color:
+                rgba: (1, 1, 1, 0.1) if self.state == 'normal' else (1, 1, 1, 0.3)
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [15,]

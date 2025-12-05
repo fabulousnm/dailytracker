@@ -6,7 +6,8 @@ from kivy.graphics import Color, Rectangle
 from kivy.utils import get_color_from_hex
 import datetime
 import math
-
+import json
+import os
 
 class LocationLogEntry(BoxLayout):
     location_text = StringProperty("")
@@ -131,23 +132,31 @@ class TrackingTab(BoxLayout):
                 print(f"fail: {e}")
 #trackinglabel里面的地点日志
     def add_sample_logs(self):
-        """添加示例日志（用于测试）"""
+        """添加示例日志（从 activitytime.json 加载）"""
         try:
-            sample_logs = [
-                LocationLogEntry("教室", "持续时间: 5400 sed", "at class"),
-                LocationLogEntry("一餐厅", "持续时间: 2700 sed", "at meal"),
-                LocationLogEntry("你在跑步", "", "speed: 4.5 m/s"),
-                LocationLogEntry("你跑完了！", "持续时间: 1200 sed", "average speed: 4.2 m/s"),
-                LocationLogEntry("你在卷！", "持续时间: 7200 sed", "reading"),
-                LocationLogEntry("你在....嘿嘿", "持续时间: 7200 sed", "reading")
-            ]
+            # 从 activitytime.json 加载
+            if os.path.exists('activitytime.json'):
+                with open('activitytime.json', 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    # 支持两种格式：直接数组 或 带 'logs' 键的字典
+                    logs_data = data.get('logs', data) if isinstance(data, dict) else data
+            else:
+                logs_data = []
 
+            # 将每个日志项转换为 LocationLogEntry 对象
+            sample_logs = []
+            for log_data in logs_data:
+                location = log_data.get('location', '')
+                duration = log_data.get('duration', '')
+                description = log_data.get('description', '')
+                entry = LocationLogEntry(location, duration, description)
+                sample_logs.append(entry)
+
+            # 添加到 UI
             for log in sample_logs:
                 self.add_log_entry(log)
-
         except Exception as e:
             print(f"fail: {e}")
-
     def update_theme(self, colors):
         """更新主题"""
         try:
@@ -160,3 +169,66 @@ class TrackingTab(BoxLayout):
                 Rectangle(pos=self.pos, size=self.size)
         except Exception as e:
             print(f"fail: {e}")
+
+    def open_local_html(self, instance):
+        """打开本地HTML文件（简化版）"""
+        try:
+            # 你的文件路径()
+            html_path = r"C:\Users\admin\PycharmProjects\dailytracker\utils\location+weather.html"
+
+            print(f"尝试打开文件: {html_path}")
+
+            # 检查文件是否存在
+            if not os.path.exists(html_path):
+                self.show_message(f"文件不存在:\n{html_path}")
+                return
+
+            print("文件存在，尝试打开...")
+
+            # 使用系统浏览器打开（最简单的方案）
+            import webbrowser
+
+            # 转换为file://URL格式
+            file_url = f"file:///{html_path.replace('\\', '/')}"
+            print(f"打开URL: {file_url}")
+
+            webbrowser.open(file_url)
+
+            self.show_message("Ciallo~")
+
+        except Exception as e:
+            print(f"打开失败: {e}")
+            self.show_message(f"打开失败: {str(e)}")
+
+    def show_message(self, message):
+        """显示消息弹窗"""
+        from kivy.uix.boxlayout import BoxLayout
+        from kivy.uix.label import Label
+        from kivy.uix.button import Button
+        from kivy.uix.popup import Popup
+
+        content = BoxLayout(orientation='vertical', spacing=10, padding=20)
+        content.add_widget(Label(
+            text=message,
+            font_name='simsun.ttc',
+            text_size=(280, None)
+        ))
+
+        ok_btn = Button(
+            text='确定',
+            size_hint_y=None,
+            height=40,
+            font_name='simsun.ttc'
+        )
+        content.add_widget(ok_btn)
+
+        popup = Popup(
+            title='loading.........',
+            content=content,
+            size_hint=(None, None),
+            size=(320, 200),
+            auto_dismiss=False
+        )
+
+        ok_btn.bind(on_press=popup.dismiss)
+        popup.open()
