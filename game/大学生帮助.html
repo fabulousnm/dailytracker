@@ -1,0 +1,2899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大学生活助手 - Markdown增强版</title>
+    <!-- 引入Markdown解析库 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.1.0/github-markdown.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 2;
+        }
+        .login-btn, .logout-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .login-btn:hover, .logout-btn:hover {
+            background: rgba(255,255,255,0.35);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .username-display {
+            font-weight: bold;
+            background: rgba(255,255,255,0.25);
+            padding: 8px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 15px 30px;
+            background: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .tab-btn i {
+            font-size: 18px;
+        }
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+            min-height: 500px;
+        }
+        .content-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Markdown样式 */
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .markdown-preview {
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        .markdown-content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 1px solid #e1e4e8;
+        }
+
+        /* 论坛样式 */
+        .forum-container {
+            display: grid;
+            gap: 25px;
+        }
+        .post-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .post-form textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            transition: border-color 0.3s;
+        }
+        .post-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        .post-form button {
+            margin-top: 15px;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .post-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .post-item {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .post-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left-color: #764ba2;
+        }
+        .post-item::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+        .post-item:hover::before {
+            transform: scaleX(1);
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #444;
+        }
+        .post-content {
+            line-height: 1.7;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .post-meta {
+            font-size: 13px;
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        .like-btn:hover {
+            color: #ff4757;
+            background: rgba(255,71,87,0.1);
+        }
+        .like-btn.liked {
+            color: #ff4757;
+        }
+        .like-count {
+            font-weight: bold;
+            color: #ff4757;
+        }
+        .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #ff4757;
+            font-size: 15px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .delete-btn:hover {
+            background: rgba(255,71,87,0.1);
+        }
+        /* 编辑按钮样式 */
+        .edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #3498db;
+            font-size: 15px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .edit-btn:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        /* Markdown工具栏 */
+        .markdown-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f1f3f4;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .md-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .md-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .md-help {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            padding: 5px 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 5px;
+        }
+
+        /* 图片上传相关样式 */
+        .image-upload-container {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .image-upload-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .image-upload-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .preview-image {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e9ecef;
+        }
+        .preview-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 71, 87, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 图片模态框 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 2001;
+        }
+
+        /* 帖子详情样式 */
+        .detail-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .back-button {
+            margin-bottom: 25px;
+            padding: 12px 25px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        .comments-section {
+            margin-top: 30px;
+        }
+        .comment-form {
+            background: #e9ecef;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+        .comment-form textarea {
+            width: 100%;
+            height: 100px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .comment-item {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #444;
+        }
+        .comment-content {
+            line-height: 1.6;
+            color: #555;
+        }
+
+        /* 生活小妙招样式 */
+        .tips-add-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        .tips-filter {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .tips-filter label {
+            font-weight: 600;
+            color: #444;
+        }
+        .tips-filter select {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        .tips-filter select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        .tips-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        .tip-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .tip-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        .tip-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        .tip-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tip-content-preview {
+            line-height: 1.7;
+            color: #666;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .tip-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .tip-category {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .tip-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .tip-delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #ff4757;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .tip-delete-btn:hover {
+            background: rgba(255,71,87,0.1);
+        }
+        .tip-edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #3498db;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .tip-edit-btn:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        /* 学习资源样式 */
+        .resources-container {
+            display: grid;
+            gap: 25px;
+        }
+        .resource-item {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .resource-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        .resource-icon {
+            font-size: 32px;
+            color: #667eea;
+            min-width: 50px;
+            text-align: center;
+        }
+        .resource-info {
+            flex: 1;
+        }
+        .resource-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        .resource-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .resource-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+        .resource-link:hover {
+            text-decoration: underline;
+            color: #764ba2;
+        }
+        .resource-category {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .resource-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .resource-edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #3498db;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .resource-edit-btn:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+        .add-resource-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* 登录模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            position: relative;
+            animation: modalAppear 0.4s ease;
+        }
+        @keyframes modalAppear {
+            from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .modal-header h2 {
+            color: #667eea;
+            font-size: 24px;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+            transition: all 0.3s ease;
+            position: absolute;
+            right: 0;
+            top: -5px;
+        }
+        .close-modal:hover {
+            color: #667eea;
+            transform: rotate(90deg);
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .auth-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 14px 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .auth-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        .auth-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .auth-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+        }
+        .auth-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        /* 通知提示 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1001;
+            transform: translateX(200%);
+            transition: transform 0.4s ease;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        .notification.error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .tab-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+                width: 100%;
+            }
+
+            .tips-container {
+                grid-template-columns: 1fr;
+            }
+
+            .resource-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .tips-filter {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .markdown-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .md-btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 大学生活助手</h1>
+            <p class="subtitle">Markdown + 图片上传支持</p>
+            <div class="user-info" id="userInfo">
+                <button class="login-btn" onclick="openAuthModal()">登录/注册</button>
+            </div>
+        </header>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="forum">
+                <i>💬</i> 论坛交流
+            </button>
+            <button class="tab-btn" data-tab="tips">
+                <i>💡</i> 生活妙招
+            </button>
+            <button class="tab-btn" data-tab="resources">
+                <i>📚</i> 学习资源
+            </button>
+        </div>
+
+        <!-- 论坛模块 -->
+        <div id="forum" class="content-section active">
+            <div class="forum-container">
+                <div class="post-form">
+                    <h3>发布新帖子（支持Markdown和图片）</h3>
+
+                    <!-- Markdown工具栏 -->
+                    <div class="markdown-toolbar">
+                        <button class="md-btn" onclick="insertMarkdown('bold', 'forum')">**粗体**</button>
+                        <button class="md-btn" onclick="insertMarkdown('italic', 'forum')">*斜体*</button>
+                        <button class="md-btn" onclick="insertMarkdown('header', 'forum')"># 标题</button>
+                        <button class="md-btn" onclick="insertMarkdown('link', 'forum')">[链接](URL)</button>
+                        <button class="md-btn" onclick="insertMarkdown('code', 'forum')">`代码`</button>
+                        <button class="md-btn" onclick="insertMarkdown('list', 'forum')">- 列表</button>
+                        <button class="md-btn" onclick="insertMarkdown('quote', 'forum')">> 引用</button>
+                        <button class="md-btn" onclick="togglePreview('forum')">预览/编辑</button>
+                        <div class="md-help">支持Markdown语法，点击上方按钮快速插入格式</div>
+                    </div>
+
+                    <textarea id="postContent" placeholder="分享你的想法或问题...支持Markdown语法：
+# 标题
+**粗体** *斜体*
+- 列表项
+> 引用
+`代码`
+![图片描述](图片链接)
+[链接文字](URL)"></textarea>
+
+                    <!-- 图片上传区域 -->
+                    <div class="image-upload-container">
+                        <h4>上传图片（支持多图）</h4>
+                        <input type="file" id="postImageInput" accept="image/*" multiple style="display: none;">
+                        <button class="image-upload-btn" onclick="document.getElementById('postImageInput').click()">
+                            📷 选择图片
+                        </button>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">支持JPG、PNG格式，单张最大5MB</p>
+
+                        <div class="image-preview" id="postImagePreview"></div>
+                    </div>
+
+                    <!-- 实时预览 -->
+                    <div id="postPreview" class="markdown-preview"></div>
+
+                    <button onclick="submitPost()">发布帖子</button>
+                </div>
+
+                <div id="postsList">
+                    <!-- 动态加载帖子 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 论坛帖子详情模块 -->
+        <div id="postDetail" class="content-section">
+            <div class="detail-section" id="forumPostDetailContent">
+                <!-- 帖子详情内容将动态加载 -->
+            </div>
+            <div class="comments-section" id="forumCommentsSection">
+                <!-- 评论区域 -->
+            </div>
+        </div>
+
+        <!-- 生活小妙招模块 -->
+        <div id="tips" class="content-section">
+            <!-- 添加生活妙招的表单 -->
+            <div class="tips-add-form">
+                <h3>添加生活妙招（支持Markdown和图片）</h3>
+
+                <div class="form-group">
+                    <label for="tipTitle">妙招标题:</label>
+                    <input type="text" id="tipTitle" placeholder="输入妙招标题">
+                </div>
+
+                <!-- Markdown工具栏 -->
+                <div class="markdown-toolbar">
+                    <button class="md-btn" onclick="insertMarkdown('bold', 'tip')">**粗体**</button>
+                    <button class="md-btn" onclick="insertMarkdown('italic', 'tip')">*斜体*</button>
+                    <button class="md-btn" onclick="insertMarkdown('header', 'tip')">## 小标题</button>
+                    <button class="md-btn" onclick="insertMarkdown('list', 'tip')">1. 步骤</button>
+                    <button class="md-btn" onclick="insertMarkdown('code', 'tip')">`代码`</button>
+                    <button class="md-btn" onclick="togglePreview('tip')">预览/编辑</button>
+                    <div class="md-help">支持Markdown语法，可制作精美教程</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tipContent">妙招内容:</label>
+                    <textarea id="tipContent" placeholder="输入妙招详细内容，支持Markdown语法..."></textarea>
+                </div>
+
+                <!-- 图片上传区域 -->
+                <div class="image-upload-container">
+                    <h4>上传示意图（最多5张）</h4>
+                    <input type="file" id="tipImageInput" accept="image/*" multiple style="display: none;">
+                    <button class="image-upload-btn" onclick="document.getElementById('tipImageInput').click()">
+                        📷 选择图片
+                    </button>
+                    <p style="font-size: 12px; color: #666; margin-top: 8px;">支持JPG、PNG格式，单张最大5MB</p>
+
+                    <div class="image-preview" id="tipImagePreview"></div>
+                </div>
+
+                <!-- 实时预览 -->
+                <div id="tipPreview" class="markdown-preview"></div>
+
+                <div class="form-group">
+                    <label for="tipCategory">分类:</label>
+                    <select id="tipCategory">
+                        <option value="">请选择分类</option>
+                        <option value="学习方法">学习方法</option>
+                        <option value="时间管理">时间管理</option>
+                        <option value="健康生活">健康生活</option>
+                        <option value="校园生活">校园生活</option>
+                        <option value="生活技能">生活技能</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <button onclick="addTip()">添加妙招</button>
+            </div>
+
+            <!-- 分类筛选 -->
+            <div class="tips-filter">
+                <label for="categoryFilter">筛选分类:</label>
+                <select id="categoryFilter" onchange="filterTips()">
+                    <option value="all">全部分类</option>
+                    <!-- 动态加载分类选项 -->
+                </select>
+            </div>
+
+            <div class="tips-container" id="tipsContainer">
+                <!-- 动态加载小妙招 -->
+            </div>
+        </div>
+
+        <!-- 生活妙招详情模块 -->
+        <div id="tipDetail" class="content-section">
+            <div class="detail-section" id="tipDetailContent">
+                <!-- 妙招详情内容将动态加载 -->
+            </div>
+            <div class="comments-section" id="tipCommentsSection">
+                <!-- 妙招评论区域 -->
+            </div>
+        </div>
+
+        <!-- 生活妙招编辑模块 -->
+        <div id="tipEdit" class="content-section">
+            <div class="detail-section">
+                <h3>编辑生活妙招</h3>
+                <div class="form-group">
+                    <label for="editTipTitle">妙招标题:</label>
+                    <input type="text" id="editTipTitle" placeholder="输入妙招标题">
+                </div>
+
+                <!-- Markdown工具栏 -->
+                <div class="markdown-toolbar">
+                    <button class="md-btn" onclick="insertMarkdown('bold', 'editTip')">**粗体**</button>
+                    <button class="md-btn" onclick="insertMarkdown('italic', 'editTip')">*斜体*</button>
+                    <button class="md-btn" onclick="insertMarkdown('header', 'editTip')">## 小标题</button>
+                    <button class="md-btn" onclick="togglePreview('editTip')">预览/编辑</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="editTipContent">妙招内容:</label>
+                    <textarea id="editTipContent" placeholder="输入妙招详细内容"></textarea>
+                </div>
+
+                <!-- 图片上传区域 -->
+                <div class="image-upload-container">
+                    <h4>管理图片</h4>
+                    <input type="file" id="editTipImageInput" accept="image/*" multiple style="display: none;">
+                    <button class="image-upload-btn" onclick="document.getElementById('editTipImageInput').click()">
+                        📷 添加图片
+                    </button>
+                    <div class="image-preview" id="editTipImagePreview"></div>
+                </div>
+
+                <!-- 实时预览 -->
+                <div id="editTipPreview" class="markdown-preview"></div>
+
+                <div class="form-group">
+                    <label for="editTipCategory">分类:</label>
+                    <select id="editTipCategory">
+                        <option value="学习方法">学习方法</option>
+                        <option value="时间管理">时间管理</option>
+                        <option value="健康生活">健康生活</option>
+                        <option value="校园生活">校园生活</option>
+                        <option value="生活技能">生活技能</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button onclick="saveTipEdit()">保存修改</button>
+                    <button onclick="cancelTipEdit()" style="margin-left: 10px; background: #6c757d;">取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 学习资源整合模块 -->
+        <div id="resources" class="content-section">
+            <div class="add-resource-form">
+                <h3>添加学习资源</h3>
+                <div class="form-group">
+                    <label for="resourceName">资源名称:</label>
+                    <input type="text" id="resourceName" placeholder="输入资源名称">
+                </div>
+                <div class="form-group">
+                    <label for="resourceDescription">资源描述:</label>
+                    <textarea id="resourceDescription" placeholder="输入资源描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="resourceLink">资源链接:</label>
+                    <input type="url" id="resourceLink" placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label for="resourceCategory">分类:</label>
+                    <input type="text" id="resourceCategory" placeholder="如：编程、数学、英语等">
+                </div>
+                <button onclick="addResource()">添加资源</button>
+            </div>
+
+            <div class="resources-container" id="resourcesContainer">
+                <!-- 动态加载资源 -->
+            </div>
+        </div>
+
+        <!-- 学习资源编辑模块 -->
+        <div id="resourceEdit" class="content-section">
+            <div class="detail-section">
+                <h3>编辑学习资源</h3>
+                <div class="form-group">
+                    <label for="editResourceName">资源名称:</label>
+                    <input type="text" id="editResourceName" placeholder="输入资源名称">
+                </div>
+                <div class="form-group">
+                    <label for="editResourceDescription">资源描述:</label>
+                    <textarea id="editResourceDescription" placeholder="输入资源描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editResourceLink">资源链接:</label>
+                    <input type="url" id="editResourceLink" placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label for="editResourceCategory">分类:</label>
+                    <input type="text" id="editResourceCategory" placeholder="如：编程、数学、英语等">
+                </div>
+                <div class="form-group">
+                    <button onclick="saveResourceEdit()">保存修改</button>
+                    <button onclick="cancelResourceEdit()" style="margin-left: 10px; background: #6c757d;">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录模态框 -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>用户登录</h2>
+                <button class="close-modal" onclick="closeAuthModal()">&times;</button>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">登录</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">注册</button>
+            </div>
+            <div id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" class="auth-input" placeholder="用户名">
+                <input type="password" id="loginPassword" class="auth-input" placeholder="密码">
+                <button class="auth-submit" onclick="loginUser()">登录</button>
+                <div id="loginMessage" class="auth-message"></div>
+            </div>
+            <div id="registerForm" class="auth-form">
+                <input type="text" id="registerUsername" class="auth-input" placeholder="用户名">
+                <input type="password" id="registerPassword" class="auth-input" placeholder="密码">
+                <input type="password" id="confirmPassword" class="auth-input" placeholder="确认密码">
+                <button class="auth-submit" onclick="registerUser()">注册</button>
+                <div id="registerMessage" class="auth-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div id="imageModal" class="image-modal">
+        <button class="close-modal-btn" onclick="closeImageModal()">&times;</button>
+        <img id="modalImage" src="" alt="">
+    </div>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // 全局变量
+        let currentUser = null;
+        let posts = [];
+        let tips = [];
+        let resources = [];
+        let users = [];
+
+        // 图片存储
+        let uploadedImages = {
+            forum: [],
+            tip: [],
+            editTip: []
+        };
+
+        // 当前选中的ID
+        let currentForumPostId = null;
+        let currentTipId = null;
+        let currentResourceId = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始初始化...');
+
+            // 初始化marked.js
+            marked.setOptions({
+                breaks: true,
+                gfm: true,
+                highlight: function(code, lang) {
+                    return code;
+                }
+            });
+
+            // 加载数据
+            loadFromLocalStorage();
+
+            // 初始化事件监听器
+            initEventListeners();
+
+            // 渲染初始内容
+            renderPosts();
+            renderTips();
+            renderResources();
+            renderCategoryFilter();
+            updateUserInfo();
+
+            console.log('初始化完成');
+        });
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            console.log('初始化事件监听器...');
+
+            // 绑定标签切换事件
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // 绑定ESC键关闭模态框
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeAuthModal();
+                    closeImageModal();
+                }
+            });
+
+            // 绑定图片上传事件
+            const postImageInput = document.getElementById('postImageInput');
+            if (postImageInput) {
+                postImageInput.addEventListener('change', function(e) {
+                    console.log('论坛图片上传事件触发');
+                    handleImageUpload(e, 'forum');
+                });
+            }
+
+            const tipImageInput = document.getElementById('tipImageInput');
+            if (tipImageInput) {
+                tipImageInput.addEventListener('change', function(e) {
+                    console.log('妙招图片上传事件触发');
+                    handleImageUpload(e, 'tip');
+                });
+            }
+
+            const editTipImageInput = document.getElementById('editTipImageInput');
+            if (editTipImageInput) {
+                editTipImageInput.addEventListener('change', function(e) {
+                    console.log('编辑妙招图片上传事件触发');
+                    handleImageUpload(e, 'editTip');
+                });
+            }
+
+            // 绑定Markdown输入事件
+            const postContent = document.getElementById('postContent');
+            if (postContent) {
+                postContent.addEventListener('input', function() {
+                    updateMarkdownPreview('forum');
+                });
+            }
+
+            const tipContent = document.getElementById('tipContent');
+            if (tipContent) {
+                tipContent.addEventListener('input', function() {
+                    updateMarkdownPreview('tip');
+                });
+            }
+
+            const editTipContent = document.getElementById('editTipContent');
+            if (editTipContent) {
+                editTipContent.addEventListener('input', function() {
+                    updateMarkdownPreview('editTip');
+                });
+            }
+
+            console.log('事件监听器初始化完成');
+        }
+
+        // Markdown相关函数
+        function insertMarkdown(type, context) {
+            console.log('插入Markdown:', type, context);
+
+            const textareas = {
+                'forum': 'postContent',
+                'tip': 'tipContent',
+                'editTip': 'editTipContent'
+            };
+
+            const textareaId = textareas[context];
+            if (!textareaId) return;
+
+            const textarea = document.getElementById(textareaId);
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            let insertText = '';
+
+            switch(type) {
+                case 'bold':
+                    insertText = selectedText ? `**${selectedText}**` : '**粗体文字**';
+                    break;
+                case 'italic':
+                    insertText = selectedText ? `*${selectedText}*` : '*斜体文字*';
+                    break;
+                case 'header':
+                    insertText = selectedText ? `## ${selectedText}` : '## 二级标题';
+                    break;
+                case 'link':
+                    insertText = selectedText ? `[${selectedText}](URL)` : '[链接文字](https://example.com)';
+                    break;
+                case 'code':
+                    insertText = selectedText ? `\`${selectedText}\`` : '`代码`';
+                    break;
+                case 'list':
+                    insertText = selectedText ? `- ${selectedText}` : '- 列表项';
+                    break;
+                case 'quote':
+                    insertText = selectedText ? `> ${selectedText}` : '> 引用文字';
+                    break;
+            }
+
+            // 插入文本
+            textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+            textarea.focus();
+            textarea.selectionStart = start + insertText.length;
+            textarea.selectionEnd = start + insertText.length;
+
+            // 更新预览
+            updateMarkdownPreview(context);
+        }
+
+        function togglePreview(context) {
+            console.log('切换预览:', context);
+
+            const previews = {
+                'forum': { preview: 'postPreview', textarea: 'postContent' },
+                'tip': { preview: 'tipPreview', textarea: 'tipContent' },
+                'editTip': { preview: 'editTipPreview', textarea: 'editTipContent' }
+            };
+
+            const config = previews[context];
+            if (!config) return;
+
+            const preview = document.getElementById(config.preview);
+            const textarea = document.getElementById(config.textarea);
+
+            if (!preview || !textarea) return;
+
+            if (preview.style.display === 'none') {
+                // 显示预览
+                preview.innerHTML = marked.parse(textarea.value || '');
+                preview.style.display = 'block';
+                textarea.style.display = 'none';
+            } else {
+                // 显示编辑器
+                preview.style.display = 'none';
+                textarea.style.display = 'block';
+            }
+        }
+
+        function updateMarkdownPreview(context) {
+            const previews = {
+                'forum': { preview: 'postPreview', textarea: 'postContent' },
+                'tip': { preview: 'tipPreview', textarea: 'tipContent' },
+                'editTip': { preview: 'editTipPreview', textarea: 'editTipContent' }
+            };
+
+            const config = previews[context];
+            if (!config) return;
+
+            const preview = document.getElementById(config.preview);
+            const textarea = document.getElementById(config.textarea);
+
+            if (!preview || !textarea) return;
+
+            if (preview.style.display !== 'none') {
+                preview.innerHTML = marked.parse(textarea.value || '');
+            }
+        }
+
+        // 图片上传相关函数 - 修复版
+        function handleImageUpload(event, context) {
+            console.log('处理图片上传:', context, event.target.files.length);
+
+            const files = event.target.files;
+
+            // 获取正确的预览容器
+            let previewContainer;
+            if (context === 'forum') {
+                previewContainer = document.getElementById('postImagePreview');
+            } else {
+                previewContainer = document.getElementById(context + 'ImagePreview');
+            }
+
+
+
+
+
+
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!previewContainer) {
+                console.error('找不到预览容器:', context + 'ImagePreview');
+                return;
+            }
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // 检查文件大小
+                if (file.size > maxSize) {
+                    showNotification(`图片 ${file.name} 超过5MB限制`, 'error');
+                    continue;
+                }
+
+                // 检查文件类型
+                if (!file.type.match('image.*')) {
+                    showNotification(`文件 ${file.name} 不是图片格式`, 'error');
+                    continue;
+                }
+
+                // 检查最大数量
+                if (uploadedImages[context].length >= 5) {
+                    showNotification('最多只能上传5张图片', 'error');
+                    break;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = {
+                        id: Date.now() + i,
+                        name: file.name,
+                        data: e.target.result,
+                        size: file.size,
+                        type: file.type
+                    };
+
+                    uploadedImages[context].push(imageData);
+                    renderImagePreview(context, imageData);
+
+                    // 自动插入Markdown图片语法
+                    const textareas = {
+                        'forum': 'postContent',
+                        'tip': 'tipContent',
+                        'editTip': 'editTipContent'
+                    };
+
+                    const textareaId = textareas[context];
+                    if (textareaId) {
+                        const textarea = document.getElementById(textareaId);
+                        if (textarea) {
+                            const cursorPos = textarea.selectionStart;
+                            const markdownImg = `\n![${imageData.name}](${imageData.data})\n`;
+                            const currentText = textarea.value;
+                            const newText = currentText.substring(0, cursorPos) + markdownImg + currentText.substring(cursorPos);
+                            textarea.value = newText;
+                            updateMarkdownPreview(context);
+                        }
+                    }
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            // 重置文件输入
+            event.target.value = '';
+        }
+
+        function renderImagePreview(context, imageData) {
+            const previewContainer = document.getElementById(context + 'ImagePreview');
+            if (!previewContainer) return;
+
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'preview-image';
+            imageDiv.innerHTML = `
+                <img src="${imageData.data}" alt="${imageData.name}" onclick="viewImage('${imageData.data}')">
+                <button class="remove-image" onclick="removeImage('${context}', ${imageData.id})">×</button>
+            `;
+
+            previewContainer.appendChild(imageDiv);
+        }
+
+        function removeImage(context, imageId) {
+            uploadedImages[context] = uploadedImages[context].filter(img => img.id !== imageId);
+            updateImagePreview(context);
+        }
+
+        function updateImagePreview(context) {
+            const previewContainer = document.getElementById(context + 'ImagePreview');
+            if (!previewContainer) return;
+
+            previewContainer.innerHTML = '';
+
+            uploadedImages[context].forEach(image => {
+                renderImagePreview(context, image);
+            });
+        }
+
+        function viewImage(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+
+            if (!modal || !modalImg) return;
+
+            modalImg.src = imageSrc;
+            modal.style.display = 'flex';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 本地存储相关函数
+        function saveToLocalStorage() {
+            console.log('保存数据到本地存储');
+            try {
+                localStorage.setItem('universityForumPosts', JSON.stringify(posts));
+                localStorage.setItem('universityForumTips', JSON.stringify(tips));
+                localStorage.setItem('universityForumResources', JSON.stringify(resources));
+                localStorage.setItem('universityForumUsers', JSON.stringify(users));
+                console.log('数据保存成功');
+            } catch (e) {
+                console.error('保存数据失败:', e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            console.log('从本地存储加载数据');
+
+            // 加载帖子
+            try {
+                const savedPosts = localStorage.getItem('universityForumPosts');
+                if (savedPosts) {
+                    posts = JSON.parse(savedPosts);
+                    // 确保每个帖子都有images属性且是数组
+                    posts.forEach(post => {
+                        if (!post.images || !Array.isArray(post.images)) {
+                            post.images = [];
+                        }
+                    });
+                    console.log('加载帖子:', posts.length);
+                } else {
+                    posts = [];
+                    console.log('无保存的帖子数据，使用空数组');
+                }
+            } catch (e) {
+                console.error('加载帖子数据失败:', e);
+                posts = [];
+            }
+
+            // 加载妙招
+            try {
+                const savedTips = localStorage.getItem('universityForumTips');
+                if (savedTips) {
+                    tips = JSON.parse(savedTips);
+                    console.log('加载妙招:', tips.length);
+                } else {
+                    // 初始化示例数据
+                    tips = [
+                        {
+                            id: 1,
+                            title: "高效学习技巧",
+                            content: "使用**番茄工作法**，25分钟专注学习+5分钟休息，提高学习效率。\n\n## 具体步骤：\n1. 设置25分钟计时器\n2. 专注学习\n3. 休息5分钟\n4. 每4个番茄钟后休息15-30分钟",
+                            category: "学习方法",
+                            author: "admin",
+                            time: new Date('2025-01-01').toLocaleString('zh-CN'),
+                            comments: [],
+                            images: []
+                        },
+                        {
+                            id: 2,
+                            title: "时间管理技巧",
+                            content: "**四象限时间管理法**：\n\n| 重要性 | 紧急性 | 处理方式 |\n|--------|--------|----------|\n| 高 | 高 | 立即处理 |\n| 高 | 低 | 计划处理 |\n| 低 | 高 | 委托他人 |\n| 低 | 低 | 尽量不做 |",
+                            category: "时间管理",
+                            author: "student1",
+                            time: new Date('2025-01-02').toLocaleString('zh-CN'),
+                            comments: [],
+                            images: []
+                        }
+                    ];
+                    console.log('使用示例妙招数据');
+                }
+            } catch (e) {
+                console.error('加载妙招数据失败:', e);
+                tips = [];
+            }
+
+            // 加载资源
+            try {
+                const savedResources = localStorage.getItem('universityForumResources');
+                if (savedResources) {
+                    resources = JSON.parse(savedResources);
+                    console.log('加载资源:', resources.length);
+                } else {
+                    resources = [
+                        {
+                            id: 1,
+                            name: "Coursera在线课程",
+                            description: "提供各种免费的在线课程，涵盖计算机科学、商业等多个领域。",
+                            link: "https://www.coursera.org",
+                            category: "在线教育"
+                        },
+                        {
+                            id: 2,
+                            name: "GitHub学习资源",
+                            description: "开源代码平台，可以学习各种编程项目和技术文档。",
+                            link: "https://github.com",
+                            category: "编程学习"
+                        }
+                    ];
+                    console.log('使用示例资源数据');
+                }
+            } catch (e) {
+                console.error('加载资源数据失败:', e);
+                resources = [];
+            }
+
+            // 加载用户
+            try {
+                const savedUsers = localStorage.getItem('universityForumUsers');
+                if (savedUsers) {
+                    users = JSON.parse(savedUsers);
+                    console.log('加载用户:', users.length);
+                } else {
+                    users = [
+                        { username: "admin", password: "admin123" },
+                        { username: "student1", password: "pass123" }
+                    ];
+                    console.log('使用示例用户数据');
+                }
+            } catch (e) {
+                console.error('加载用户数据失败:', e);
+                users = [
+                    { username: "admin", password: "admin123" },
+                    { username: "student1", password: "pass123" }
+                ];
+            }
+
+            console.log('数据加载完成');
+        }
+
+        // 用户系统相关函数
+        function switchAuthTab(tab) {
+            console.log('切换认证标签:', tab);
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+                document.getElementById('registerForm').classList.remove('active');
+                document.querySelector('.auth-tab:nth-child(1)').classList.add('active');
+                document.querySelector('.auth-tab:nth-child(2)').classList.remove('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+                document.getElementById('loginForm').classList.remove('active');
+                document.querySelector('.auth-tab:nth-child(2)').classList.add('active');
+                document.querySelector('.auth-tab:nth-child(1)').classList.remove('active');
+            }
+        }
+
+        function openAuthModal() {
+            console.log('打开登录模态框');
+            document.getElementById('authModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAuthModal() {
+            console.log('关闭登录模态框');
+            document.getElementById('authModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            clearAuthMessages();
+        }
+
+        function clearAuthMessages() {
+            const loginMessage = document.getElementById('loginMessage');
+            const registerMessage = document.getElementById('registerMessage');
+
+            if (loginMessage) {
+                loginMessage.className = 'auth-message';
+                loginMessage.textContent = '';
+            }
+            if (registerMessage) {
+                registerMessage.className = 'auth-message';
+                registerMessage.textContent = '';
+            }
+        }
+
+        function loginUser() {
+            console.log('用户登录');
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!username || !password) {
+                showMessage('loginMessage', '请输入用户名和密码', 'error');
+                return;
+            }
+
+            const user = users.find(u => u.username === username && u.password === password);
+
+            if (user) {
+                currentUser = user;
+                saveToLocalStorage();
+                updateUserInfo();
+                closeAuthModal();
+                showNotification('登录成功！欢迎回来 ' + currentUser.username, 'success');
+            } else {
+                showMessage('loginMessage', '用户名或密码错误', 'error');
+            }
+        }
+
+        function registerUser() {
+            console.log('用户注册');
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+            if (!username || !password || !confirmPassword) {
+                showMessage('registerMessage', '请填写所有字段', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('registerMessage', '两次输入的密码不一致', 'error');
+                return;
+            }
+
+            if (users.some(u => u.username === username)) {
+                showMessage('registerMessage', '用户名已存在', 'error');
+                return;
+            }
+
+            users.push({ username: username, password: password });
+            currentUser = { username: username, password: password };
+            saveToLocalStorage();
+            updateUserInfo();
+            closeAuthModal();
+            showNotification('注册成功！欢迎加入我们 ' + currentUser.username, 'success');
+        }
+
+        function logoutUser() {
+            console.log('用户登出');
+            currentUser = null;
+            updateUserInfo();
+            saveToLocalStorage();
+            showNotification('已退出登录', 'success');
+        }
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.className = `auth-message ${type}`;
+                element.textContent = message;
+
+                setTimeout(() => {
+                    element.className = 'auth-message';
+                    element.textContent = '';
+                }, 3000);
+            }
+        }
+
+        function updateUserInfo() {
+            console.log('更新用户信息显示');
+            const userInfoDiv = document.getElementById('userInfo');
+
+            if (!userInfoDiv) return;
+
+            if (currentUser) {
+                userInfoDiv.innerHTML = `
+                    <span class="username-display">👤 ${currentUser.username}</span>
+                    <button class="logout-btn" onclick="logoutUser()">退出登录</button>
+                `;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <button class="login-btn" onclick="openAuthModal()">登录/注册</button>
+                `;
+            }
+        }
+
+        function showNotification(message, type) {
+            console.log('显示通知:', message, type);
+            const notification = document.getElementById('notification');
+            if (!notification) return;
+
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 论坛相关函数 - 修复图片上传问题
+        function submitPost() {
+            console.log('提交帖子');
+            console.log('当前上传的图片:', uploadedImages.forum);
+
+            if (!currentUser) {
+                showNotification('请先登录后再发布帖子！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const content = document.getElementById('postContent').value.trim();
+            if (!content) {
+                showNotification('请输入帖子内容！', 'error');
+                return;
+            }
+
+            const newPost = {
+                id: Date.now(),
+                author: currentUser.username,
+                content: content,
+                time: new Date().toLocaleString('zh-CN'),
+                likes: 0,
+                likedBy: [],
+                comments: [],
+                images: JSON.parse(JSON.stringify(uploadedImages.forum))  // 深度复制图片数据
+            };
+
+            console.log('新帖子数据:', newPost);
+            console.log('图片数据:', newPost.images);
+
+            posts.unshift(newPost);
+            saveToLocalStorage();
+
+            // 清空表单
+            document.getElementById('postContent').value = '';
+            uploadedImages.forum = [];
+            updateImagePreview('forum');
+
+            renderPosts();
+            showNotification('帖子发布成功！', 'success');
+        }
+
+        function renderPosts() {
+            console.log('渲染帖子列表');
+            const postsList = document.getElementById('postsList');
+            if (!postsList) return;
+
+            postsList.innerHTML = '';
+
+            if (posts.length === 0) {
+                postsList.innerHTML = '<p style="text-align:center; color:#777; padding:30px;">暂无帖子，请发布第一个帖子吧！</p>';
+                return;
+            }
+
+            posts.forEach(post => {
+                console.log('渲染帖子:', post.id, '图片数量:', post.images ? post.images.length : 0);
+
+                const postElement = document.createElement('div');
+                postElement.className = 'post-item';
+                postElement.setAttribute('data-id', post.id);
+
+                // 解析Markdown内容
+                let contentPreview = '';
+                try {
+                    contentPreview = marked.parse(post.content || '');
+                } catch (e) {
+                    console.error('Markdown解析失败:', e);
+                    contentPreview = post.content || '';
+                }
+
+                // 构建图片预览HTML
+                let imagePreviewHTML = '';
+                if (post.images && post.images.length > 0) {
+                    console.log('帖子有图片，构建预览:', post.images);
+
+                    // 创建一个图片预览容器
+                    const imageContainer = document.createElement('div');
+                    imageContainer.style.marginTop = '15px';
+                    imageContainer.style.display = 'flex';
+                    imageContainer.style.flexWrap = 'wrap';
+                    imageContainer.style.gap = '8px';
+                    imageContainer.style.alignItems = 'center';
+
+                    // 添加前两张图片预览
+                    post.images.slice(0, 2).forEach((img, index) => {
+                        if (img && img.data) {
+                            const imgWrapper = document.createElement('div');
+                            imgWrapper.style.position = 'relative';
+                            imgWrapper.style.cursor = 'pointer';
+                            imgWrapper.onclick = (e) => {
+                                e.stopPropagation();
+                                viewImage(img.data);
+                            };
+
+                            const imgElement = document.createElement('img');
+                            imgElement.src = img.data;
+                            imgElement.alt = img.name || '图片';
+                            imgElement.style.width = '70px';
+                            imgElement.style.height = '70px';
+                            imgElement.style.objectFit = 'cover';
+                            imgElement.style.borderRadius = '6px';
+                            imgElement.style.border = '1px solid #eee';
+
+                            imgWrapper.appendChild(imgElement);
+                            imageContainer.appendChild(imgWrapper);
+                        }
+                    });
+
+                    // 如果有更多图片，显示数量
+                    if (post.images.length > 2) {
+                        const moreSpan = document.createElement('span');
+                        moreSpan.textContent = `+${post.images.length - 2}张图片`;
+                        moreSpan.style.color = '#667eea';
+                        moreSpan.style.fontSize = '12px';
+                        moreSpan.style.fontWeight = '500';
+                        moreSpan.style.marginLeft = '10px';
+                        imageContainer.appendChild(moreSpan);
+                    }
+
+                    // 将图片容器转换为HTML字符串
+                    imagePreviewHTML = imageContainer.outerHTML;
+                }
+
+                postElement.innerHTML = `
+                    <div class="post-header">
+                        <span>${post.author || '匿名用户'}</span>
+                        <span>${post.time || '未知时间'}</span>
+                    </div>
+                    <div class="markdown-content">
+                        <div class="markdown-body">${contentPreview}</div>
+                    </div>
+                    ${imagePreviewHTML}
+                    <div class="post-meta">
+                        <span>评论: ${post.comments ? post.comments.length : 0}</span>
+                        <span>点赞: ${post.likes || 0}</span>
+                    </div>
+                    <div class="post-actions">
+                        <button class="like-btn ${post.likedBy && post.likedBy.includes(currentUser?.username) ? 'liked' : ''}"
+                                onclick="event.stopPropagation(); likePost(${post.id})">
+                            ❤️ <span class="like-count">${post.likes || 0}</span>
+                        </button>
+                        ${currentUser && post.author === currentUser.username ?
+                            `<button class="delete-btn" onclick="event.stopPropagation(); deletePost(${post.id})">🗑️ 删除</button>` : ''}
+                    </div>
+                `;
+
+                postElement.addEventListener('click', () => {
+                    showForumPostDetail(post.id);
+                });
+
+                postsList.appendChild(postElement);
+            });
+        }
+
+        function showForumPostDetail(postId) {
+            console.log('显示帖子详情:', postId);
+            console.log('所有帖子:', posts);
+
+            const post = posts.find(p => p.id === postId);
+            if (!post) {
+                console.error('找不到帖子:', postId);
+                return;
+            }
+
+            console.log('找到帖子:', post);
+            console.log('帖子图片:', post.images);
+
+            currentForumPostId = postId;
+
+            // 切换到详情页面
+            document.getElementById('forum').classList.remove('active');
+            document.getElementById('postDetail').classList.add('active');
+
+            // 解析Markdown内容
+            let contentHtml = '';
+            try {
+                contentHtml = marked.parse(post.content || '');
+            } catch (e) {
+                console.error('Markdown解析失败:', e);
+                contentHtml = post.content || '';
+            }
+
+            // 构建图片HTML - 使用与生活妙招相同的方式
+            let imagesHtml = '';
+            if (post.images && post.images.length > 0) {
+                console.log('构建详情页图片HTML');
+
+                // 创建图片容器
+                const imageContainer = document.createElement('div');
+                imageContainer.style.marginTop = '20px';
+                imageContainer.style.padding = '15px';
+                imageContainer.style.backgroundColor = '#f8f9fa';
+                imageContainer.style.borderRadius = '10px';
+
+                // 添加标题
+                const title = document.createElement('h4');
+                title.textContent = `附件图片 (${post.images.length}张)`;
+                title.style.marginBottom = '15px';
+                title.style.color = '#667eea';
+                imageContainer.appendChild(title);
+
+                // 添加图片区域
+                const imagesDiv = document.createElement('div');
+                imagesDiv.className = 'image-preview';
+                imagesDiv.style.display = 'flex';
+                imagesDiv.style.flexWrap = 'wrap';
+                imagesDiv.style.gap = '15px';
+                imagesDiv.style.justifyContent = 'flex-start';
+
+                // 添加每张图片
+                post.images.forEach(img => {
+                    if (img && img.data) {
+                        const imgContainer = document.createElement('div');
+                        imgContainer.style.width = '150px';
+                        imgContainer.style.cursor = 'pointer';
+                        imgContainer.style.transition = 'transform 0.2s';
+                        imgContainer.onmouseenter = () => imgContainer.style.transform = 'scale(1.05)';
+                        imgContainer.onmouseleave = () => imgContainer.style.transform = 'scale(1)';
+                        imgContainer.onclick = () => viewImage(img.data);
+
+                        const imgElement = document.createElement('img');
+                        imgElement.src = img.data;
+                        imgElement.alt = img.name || '图片';
+                        imgElement.style.width = '100%';
+                        imgElement.style.height = '150px';
+                        imgElement.style.objectFit = 'cover';
+                        imgElement.style.borderRadius = '8px';
+                        imgElement.style.border = '2px solid #e1e4e8';
+
+                        const imgName = document.createElement('div');
+                        imgName.textContent = img.name || '图片';
+                        imgName.style.fontSize = '12px';
+                        imgName.style.color = '#666';
+                        imgName.style.marginTop = '5px';
+                        imgName.style.textAlign = 'center';
+                        imgName.style.overflow = 'hidden';
+                        imgName.style.textOverflow = 'ellipsis';
+                        imgName.style.whiteSpace = 'nowrap';
+
+                        imgContainer.appendChild(imgElement);
+                        imgContainer.appendChild(imgName);
+                        imagesDiv.appendChild(imgContainer);
+                    }
+                });
+
+                imageContainer.appendChild(imagesDiv);
+                imagesHtml = imageContainer.outerHTML;
+            }
+
+            const detailContent = document.getElementById('forumPostDetailContent');
+            if (detailContent) {
+                detailContent.innerHTML = `
+                    <button class="back-button" onclick="goBackToForum()">← 返回论坛</button>
+                    <div class="post-header">
+                        <span>${post.author || '匿名用户'}</span>
+                        <span>${post.time || '未知时间'}</span>
+                    </div>
+                    <div class="markdown-content">
+                        <div class="markdown-body">${contentHtml}</div>
+                    </div>
+                    ${imagesHtml}
+                    <div class="post-meta">
+                        <span>评论: ${post.comments ? post.comments.length : 0}</span>
+                        <span>点赞: ${post.likes || 0}</span>
+                    </div>
+                    <div class="post-actions">
+                        <button class="like-btn ${post.likedBy && post.likedBy.includes(currentUser?.username) ? 'liked' : ''}"
+                                onclick="likePost(${post.id})">
+                            ❤️ <span class="like-count">${post.likes || 0}</span>
+                        </button>
+                        ${currentUser && post.author === currentUser.username ?
+                            `<button class="delete-btn" onclick="deletePost(${post.id})">🗑️ 删除</button>` : ''}
+                    </div>
+                `;
+            }
+
+            renderForumComments(postId);
+        }
+
+        function goBackToForum() {
+            document.getElementById('postDetail').classList.remove('active');
+            document.getElementById('forum').classList.add('active');
+        }
+
+        function renderForumComments(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const commentsSection = document.getElementById('forumCommentsSection');
+            if (!commentsSection) return;
+
+            commentsSection.innerHTML = `
+                <div class="comment-form">
+                    <h4>发表评论</h4>
+                    <textarea id="forumCommentContent-${postId}" placeholder="写下你的评论..."></textarea>
+                    <button onclick="addForumComment(${postId})">发表评论</button>
+                </div>
+                <h4>评论 (${post.comments ? post.comments.length : 0})</h4>
+            `;
+
+            const commentsContainer = document.createElement('div');
+            commentsContainer.id = 'forumCommentsContainer';
+
+            if (!post.comments || post.comments.length === 0) {
+                commentsContainer.innerHTML = '<p style="text-align:center; color:#777; padding:20px;">暂无评论</p>';
+            } else {
+                post.comments.forEach(comment => {
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment-item';
+                    commentElement.innerHTML = `
+                        <div class="comment-header">
+                            <span>${comment.author || '匿名用户'}</span>
+                            <span>${comment.time || '未知时间'}</span>
+                        </div>
+                        <div class="comment-content">${comment.content || ''}</div>
+                    `;
+                    commentsContainer.appendChild(commentElement);
+                });
+            }
+            commentsSection.appendChild(commentsContainer);
+        }
+
+        function addForumComment(postId) {
+            console.log('添加论坛评论:', postId);
+
+            if (!currentUser) {
+                showNotification('请先登录后再评论！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const commentInput = document.getElementById(`forumCommentContent-${postId}`);
+            if (!commentInput) return;
+
+            const content = commentInput.value.trim();
+
+            if (!content) {
+                showNotification('请输入评论内容！', 'error');
+                return;
+            }
+
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            if (!post.comments) post.comments = [];
+
+            const newComment = {
+                id: Date.now(),
+                author: currentUser.username,
+                content: content,
+                time: new Date().toLocaleString('zh-CN')
+            };
+
+            post.comments.push(newComment);
+            saveToLocalStorage();
+            renderForumComments(postId);
+            renderPosts();
+            commentInput.value = '';
+            showNotification('评论发表成功！', 'success');
+        }
+
+        // 生活妙招相关函数
+        function addTip() {
+            console.log('添加生活妙招');
+
+            if (!currentUser) {
+                showNotification('请先登录后再添加妙招！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const title = document.getElementById('tipTitle').value.trim();
+            const content = document.getElementById('tipContent').value.trim();
+            const category = document.getElementById('tipCategory').value;
+
+            if (!title) {
+                showNotification('请输入妙招标题！', 'error');
+                return;
+            }
+
+            if (!content) {
+                showNotification('请输入妙招内容！', 'error');
+                return;
+            }
+
+            if (!category) {
+                showNotification('请选择分类！', 'error');
+                return;
+            }
+
+            const newTip = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                category: category,
+                author: currentUser.username,
+                time: new Date().toLocaleString('zh-CN'),
+                comments: [],
+                images: JSON.parse(JSON.stringify(uploadedImages.tip))
+            };
+
+            console.log('新妙招:', newTip);
+
+            tips.unshift(newTip);
+            saveToLocalStorage();
+
+            // 清空表单
+            document.getElementById('tipTitle').value = '';
+            document.getElementById('tipContent').value = '';
+            document.getElementById('tipCategory').value = '';
+            uploadedImages.tip = [];
+            updateImagePreview('tip');
+
+            renderTips();
+            renderCategoryFilter();
+            showNotification('妙招添加成功！', 'success');
+        }
+
+        function deleteTip(tipId) {
+            console.log('删除妙招:', tipId);
+
+            if (!currentUser) {
+                showNotification('请先登录！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const tipIndex = tips.findIndex(t => t.id === tipId);
+            if (tipIndex === -1) return;
+
+            const tip = tips[tipIndex];
+            if (tip.author !== currentUser.username) {
+                showNotification('您只能删除自己发布的妙招！', 'error');
+                return;
+            }
+
+            if (confirm('确定要删除这个妙招吗？')) {
+                tips.splice(tipIndex, 1);
+                saveToLocalStorage();
+                renderTips();
+                renderCategoryFilter();
+                showNotification('妙招删除成功！', 'success');
+            }
+        }
+
+        function editTip(tipId) {
+            console.log('编辑妙招:', tipId);
+
+            if (!currentUser) {
+                showNotification('请先登录！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const tipIndex = tips.findIndex(t => t.id === tipId);
+            if (tipIndex === -1) return;
+
+            const tip = tips[tipIndex];
+            if (tip.author !== currentUser.username) {
+                showNotification('您只能编辑自己发布的妙招！', 'error');
+                return;
+            }
+
+            currentTipId = tipId;
+
+            // 切换到编辑页面
+            document.getElementById('tips').classList.remove('active');
+            document.getElementById('tipEdit').classList.add('active');
+
+            // 填充表单数据
+            document.getElementById('editTipTitle').value = tip.title;
+            document.getElementById('editTipContent').value = tip.content;
+            document.getElementById('editTipCategory').value = tip.category;
+
+            // 加载图片
+            uploadedImages.editTip = tip.images ? JSON.parse(JSON.stringify(tip.images)) : [];
+            updateImagePreview('editTip');
+        }
+
+        function saveTipEdit() {
+            console.log('保存妙招编辑');
+
+            if (!currentTipId) return;
+
+            const title = document.getElementById('editTipTitle').value.trim();
+            const content = document.getElementById('editTipContent').value.trim();
+            const category = document.getElementById('editTipCategory').value;
+
+            if (!title) {
+                showNotification('请输入妙招标题！', 'error');
+                return;
+            }
+
+            if (!content) {
+                showNotification('请输入妙招内容！', 'error');
+                return;
+            }
+
+            if (!category) {
+                showNotification('请选择分类！', 'error');
+                return;
+            }
+
+            const tipIndex = tips.findIndex(t => t.id === currentTipId);
+            if (tipIndex === -1) return;
+
+            tips[tipIndex].title = title;
+            tips[tipIndex].content = content;
+            tips[tipIndex].category = category;
+            tips[tipIndex].time = new Date().toLocaleString('zh-CN') + ' (已编辑)';
+            tips[tipIndex].images = JSON.parse(JSON.stringify(uploadedImages.editTip));
+
+            saveToLocalStorage();
+            renderTips();
+            renderCategoryFilter();
+
+            // 返回妙招列表
+            cancelTipEdit();
+            showNotification('妙招修改成功！', 'success');
+        }
+
+        function cancelTipEdit() {
+            currentTipId = null;
+            document.getElementById('tipEdit').classList.remove('active');
+            document.getElementById('tips').classList.add('active');
+            uploadedImages.editTip = [];
+            updateImagePreview('editTip');
+        }
+
+        function renderCategoryFilter() {
+            console.log('渲染分类筛选器');
+            const categoryFilter = document.getElementById('categoryFilter');
+            if (!categoryFilter) return;
+
+            const categories = [...new Set(tips.map(t => t.category))];
+
+            categoryFilter.innerHTML = '<option value="all">全部分类</option>';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        function filterTips() {
+            console.log('筛选妙招');
+            const selectedCategory = document.getElementById('categoryFilter').value;
+            let filteredTips = tips;
+            if (selectedCategory !== 'all') {
+                filteredTips = tips.filter(t => t.category === selectedCategory);
+            }
+            renderTips(filteredTips);
+        }
+
+        function renderTips(filteredTips = tips) {
+            console.log('渲染妙招列表:', filteredTips.length);
+            const tipsContainer = document.getElementById('tipsContainer');
+            if (!tipsContainer) return;
+
+            tipsContainer.innerHTML = '';
+
+            if (filteredTips.length === 0) {
+                tipsContainer.innerHTML = '<p style="text-align:center; color:#777; padding:30px;">暂无妙招，快来添加第一个吧！</p>';
+                return;
+            }
+
+            filteredTips.forEach(tip => {
+                const tipElement = document.createElement('div');
+                tipElement.className = 'tip-card';
+                tipElement.setAttribute('data-id', tip.id);
+
+                // 解析Markdown预览
+                let contentPreview = '';
+                try {
+                    contentPreview = marked.parse(tip.content || '');
+                } catch (e) {
+                    console.error('Markdown解析失败:', e);
+                    contentPreview = tip.content || '';
+                }
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = contentPreview;
+                const textContent = tempDiv.textContent || tempDiv.innerText || '';
+                const previewText = textContent.length > 100 ? textContent.substring(0, 100) + '...' : textContent;
+
+                // 构建图片预览
+                let imagePreview = '';
+                if (tip.images && tip.images.length > 0) {
+                    const moreImages = tip.images.length > 1 ?
+                        `<div style="color: #666; font-size: 12px; align-self: center;">+${tip.images.length - 1}张图</div>` : '';
+
+                    imagePreview = `
+                        <div style="margin: 10px 0; display: flex; gap: 5px;">
+                            <img src="${tip.images[0].data || ''}" alt="预览" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;">
+                            ${moreImages}
+                        </div>`;
+                }
+
+                tipElement.innerHTML = `
+                    <div class="tip-title">💡 ${tip.title || '未命名妙招'}</div>
+                    <div class="tip-content-preview">${previewText}</div>
+                    ${imagePreview}
+                    <div class="tip-meta">
+                        <span class="tip-category">${tip.category || '未分类'}</span>
+                        <span style="color: #777;">发布者: ${tip.author || '匿名用户'}</span>
+                    </div>
+                `;
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'tip-actions';
+
+                if (currentUser && tip.author === currentUser.username) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'tip-edit-btn';
+                    editBtn.innerHTML = '✏️ 编辑';
+                    editBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        editTip(tip.id);
+                    };
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'tip-delete-btn';
+                    deleteBtn.innerHTML = '🗑️ 删除';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteTip(tip.id);
+                    };
+
+                    actionsDiv.appendChild(editBtn);
+                    actionsDiv.appendChild(deleteBtn);
+                    tipElement.appendChild(actionsDiv);
+                }
+
+                tipElement.addEventListener('click', () => {
+                    showTipDetail(tip.id);
+                });
+
+                tipsContainer.appendChild(tipElement);
+            });
+        }
+
+        function showTipDetail(tipId) {
+            console.log('显示妙招详情:', tipId);
+
+            const tip = tips.find(t => t.id === tipId);
+            if (!tip) return;
+
+            currentTipId = tipId;
+
+            document.getElementById('tips').classList.remove('active');
+            document.getElementById('tipDetail').classList.add('active');
+
+            let contentHtml = '';
+            try {
+                contentHtml = marked.parse(tip.content || '');
+            } catch (e) {
+                console.error('Markdown解析失败:', e);
+                contentHtml = tip.content || '';
+            }
+
+            // 构建图片HTML
+            let imagesHtml = '';
+            if (tip.images && tip.images.length > 0) {
+                const imageItems = tip.images.map(img => `
+                    <div style="width: 150px; cursor: pointer;" onclick="viewImage('${img.data || ''}')">
+                        <img src="${img.data || ''}" alt="${img.name || '图片'}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">${img.name || '图片'}</div>
+                    </div>
+                `).join('');
+
+                imagesHtml = `
+                    <div style="margin-top: 20px;">
+                        <h4>相关图片 (${tip.images.length}张)</h4>
+                        <div class="image-preview" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            ${imageItems}
+                        </div>
+                    </div>`;
+            }
+
+            const detailContent = document.getElementById('tipDetailContent');
+            if (detailContent) {
+                detailContent.innerHTML = `
+                    <button class="back-button" onclick="goBackToTips()">← 返回妙招列表</button>
+                    <div class="post-header">
+                        <span>发布者: ${tip.author || '匿名用户'}</span>
+                        <span>发布时间: ${tip.time || '未知时间'}</span>
+                    </div>
+                    <h2 style="margin: 20px 0; color: #667eea;">💡 ${tip.title || '未命名妙招'}</h2>
+                    <div class="markdown-content">
+                        <div class="markdown-body">${contentHtml}</div>
+                    </div>
+                    ${imagesHtml}
+                    <div class="post-meta" style="margin-top: 20px;">
+                        <span class="tip-category">${tip.category || '未分类'}</span>
+                        <span>评论: ${tip.comments ? tip.comments.length : 0}</span>
+                    </div>
+                    ${currentUser && tip.author === currentUser.username ?
+                        `<div style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button class="edit-btn" onclick="editTip(${tip.id})">✏️ 编辑妙招</button>
+                            <button class="delete-btn" onclick="deleteTip(${tip.id}); goBackToTips()">🗑️ 删除妙招</button>
+                        </div>` : ''}
+                `;
+            }
+
+            renderTipComments(tipId);
+        }
+
+        function goBackToTips() {
+            document.getElementById('tipDetail').classList.remove('active');
+            document.getElementById('tips').classList.add('active');
+            renderTips();
+        }
+
+        function renderTipComments(tipId) {
+            const tip = tips.find(t => t.id === tipId);
+            if (!tip) return;
+
+            const commentsSection = document.getElementById('tipCommentsSection');
+            if (!commentsSection) return;
+
+            commentsSection.innerHTML = `
+                <div class="comment-form">
+                    <h4>发表评论</h4>
+                    <textarea id="tipCommentContent-${tipId}" placeholder="写下你的评论..."></textarea>
+                    <button onclick="addTipComment(${tipId})">发表评论</button>
+                </div>
+                <h4>评论 (${tip.comments ? tip.comments.length : 0})</h4>
+            `;
+
+            const commentsContainer = document.createElement('div');
+            commentsContainer.id = 'tipCommentsContainer';
+
+            if (!tip.comments || tip.comments.length === 0) {
+                commentsContainer.innerHTML = '<p style="text-align:center; color:#777; padding:20px;">暂无评论，快来抢沙发！</p>';
+            } else {
+                tip.comments.forEach(comment => {
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment-item';
+                    commentElement.innerHTML = `
+                        <div class="comment-header">
+                            <span>${comment.author || '匿名用户'}</span>
+                            <span>${comment.time || '未知时间'}</span>
+                        </div>
+                        <div class="comment-content">${comment.content || ''}</div>
+                    `;
+                    commentsContainer.appendChild(commentElement);
+                });
+            }
+            commentsSection.appendChild(commentsContainer);
+        }
+
+        function addTipComment(tipId) {
+            console.log('添加妙招评论:', tipId);
+
+            if (!currentUser) {
+                showNotification('请先登录后再评论！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const commentInput = document.getElementById(`tipCommentContent-${tipId}`);
+            if (!commentInput) return;
+
+            const content = commentInput.value.trim();
+
+            if (!content) {
+                showNotification('请输入评论内容！', 'error');
+                return;
+            }
+
+            const tip = tips.find(t => t.id === tipId);
+            if (!tip) return;
+
+            if (!tip.comments) tip.comments = [];
+
+            const newComment = {
+                id: Date.now(),
+                author: currentUser.username,
+                content: content,
+                time: new Date().toLocaleString('zh-CN')
+            };
+
+            tip.comments.push(newComment);
+            saveToLocalStorage();
+            renderTipComments(tipId);
+            renderTips();
+            commentInput.value = '';
+            showNotification('评论发表成功！', 'success');
+        }
+
+        // 学习资源相关函数
+        function addResource() {
+            console.log('添加学习资源');
+
+            if (!currentUser) {
+                showNotification('请先登录后再添加资源！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const name = document.getElementById('resourceName').value.trim();
+            const description = document.getElementById('resourceDescription').value.trim();
+            const link = document.getElementById('resourceLink').value.trim();
+            const category = document.getElementById('resourceCategory').value.trim();
+
+            if (!name || !description || !link) {
+                showNotification('请填写完整信息！', 'error');
+                return;
+            }
+
+            const newResource = {
+                id: Date.now(),
+                name: name,
+                description: description,
+                link: link,
+                category: category || '其他'
+            };
+
+            resources.unshift(newResource);
+            saveToLocalStorage();
+
+            // 清空表单
+            document.getElementById('resourceName').value = '';
+            document.getElementById('resourceDescription').value = '';
+            document.getElementById('resourceLink').value = '';
+            document.getElementById('resourceCategory').value = '';
+
+            renderResources();
+            showNotification('资源添加成功！', 'success');
+        }
+
+        function editResource(resourceId) {
+            console.log('编辑资源:', resourceId);
+
+            if (!currentUser) {
+                showNotification('请先登录！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const resourceIndex = resources.findIndex(r => r.id === resourceId);
+            if (resourceIndex === -1) return;
+
+            currentResourceId = resourceId;
+
+            document.getElementById('resources').classList.remove('active');
+            document.getElementById('resourceEdit').classList.add('active');
+
+            const resource = resources[resourceIndex];
+            document.getElementById('editResourceName').value = resource.name;
+            document.getElementById('editResourceDescription').value = resource.description;
+            document.getElementById('editResourceLink').value = resource.link;
+            document.getElementById('editResourceCategory').value = resource.category;
+        }
+
+        function saveResourceEdit() {
+            console.log('保存资源编辑');
+
+            if (!currentResourceId) return;
+
+            const name = document.getElementById('editResourceName').value.trim();
+            const description = document.getElementById('editResourceDescription').value.trim();
+            const link = document.getElementById('editResourceLink').value.trim();
+            const category = document.getElementById('editResourceCategory').value.trim();
+
+            if (!name || !description || !link) {
+                showNotification('请填写完整信息！', 'error');
+                return;
+            }
+
+            const resourceIndex = resources.findIndex(r => r.id === currentResourceId);
+            if (resourceIndex === -1) return;
+
+            resources[resourceIndex].name = name;
+            resources[resourceIndex].description = description;
+            resources[resourceIndex].link = link;
+            resources[resourceIndex].category = category;
+
+            saveToLocalStorage();
+            renderResources();
+
+            cancelResourceEdit();
+            showNotification('资源修改成功！', 'success');
+        }
+
+        function cancelResourceEdit() {
+            currentResourceId = null;
+            document.getElementById('resourceEdit').classList.remove('active');
+            document.getElementById('resources').classList.add('active');
+        }
+
+        function deleteResource(resourceId) {
+            console.log('删除资源:', resourceId);
+
+            if (!currentUser) {
+                showNotification('请先登录！', 'error');
+                openAuthModal();
+                return;
+            }
+
+            const resourceIndex = resources.findIndex(r => r.id === resourceId);
+            if (resourceIndex === -1) return;
+
+            if (confirm('确定要删除这个资源吗？')) {
+                resources.splice(resourceIndex, 1);
+                saveToLocalStorage();
+                renderResources();
+                showNotification('资源删除成功！', 'success');
+            }
+        }
+
+        function renderResources() {
+            console.log('渲染资源列表');
+            const resourcesContainer = document.getElementById('resourcesContainer');
+            if (!resourcesContainer) return;
+
+            resourcesContainer.innerHTML = '';
+
+            if (resources.length === 0) {
+                resourcesContainer.innerHTML = '<p style="text-align:center; color:#777; padding:30px;">暂无资源</p>';
+                return;
+            }
+
+            resources.forEach(resource => {
+                const resourceElement = document.createElement('div');
+                resourceElement.className = 'resource-item';
+                resourceElement.innerHTML = `
+                    <div class="resource-icon">📚</div>
+                    <div class="resource-info">
+                        <div class="resource-name">${resource.name || '未命名资源'}</div>
+                        <div class="resource-description">${resource.description || '无描述'}</div>
+                        <div class="resource-category">${resource.category || '未分类'}</div>
+                        <a href="${resource.link || '#'}" target="_blank" class="resource-link">访问资源 →</a>
+                    </div>
+                `;
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'resource-actions';
+
+                if (currentUser) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'resource-edit-btn';
+                    editBtn.innerHTML = '✏️ 编辑';
+                    editBtn.onclick = () => editResource(resource.id);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '🗑️ 删除';
+                    deleteBtn.onclick = () => deleteResource(resource.id);
+
+                    actionsDiv.appendChild(editBtn);
+                    actionsDiv.appendChild(deleteBtn);
+                    resourceElement.appendChild(actionsDiv);
+                }
+
+                resourcesContainer.appendChild(resourceElement);
+            });
+        }
+    </script>
+</body>
+</html>

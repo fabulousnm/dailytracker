@@ -4,7 +4,123 @@
     <title>GPS定位 + 免费实时天气与生活建议</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- 添加 Leaflet 地图库 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- 添加 html2canvas 用于截图 -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <style>
+        /* ========== 新增：地图容器样式 ========== */
+        .trajectory-map-card {
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .map-header {
+            padding: 15px 25px;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .map-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        /* 新增：地图控制按钮样式 */
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .map-control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #2c3e50;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-control-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .map-control-btn.clear {
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
+
+        .map-control-btn.save {
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+        }
+
+        .map-control-btn.clear:hover {
+            background: #e74c3c;
+        }
+
+        .map-control-btn.save:hover {
+            background: #2ecc71;
+        }
+
+        #trajectoryMap {
+            height: 300px;
+            width: 100%;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        .leaflet-container {
+            font-family: inherit;
+        }
+
+        /* 原有的样式 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 20px;
@@ -13,7 +129,7 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         .card {
@@ -246,6 +362,21 @@
             .button-group { grid-template-columns: 1fr; }
             .container { padding: 10px; }
             .card { padding: 15px; }
+            .map-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .map-stats {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            #trajectoryMap {
+                height: 250px;
+            }
+            .map-controls {
+                flex-wrap: wrap;
+            }
         }
     </style>
     <!-- 添加图标库 -->
@@ -254,6 +385,47 @@
 <body>
     <div class="container">
         <h1><i class="fas fa-map-marker-alt"></i> GPS实时定位与天气生活建议系统</h1>
+
+        <!-- ========== 新增：实时轨迹地图模块 ========== -->
+        <div class="trajectory-map-card">
+            <div class="map-header">
+                <div class="map-title">
+                    <i class="fas fa-map-marked-alt"></i> 实时GPS轨迹地图
+                </div>
+                <div class="map-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalPoints">0</div>
+                        <div class="stat-label">轨迹点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalDistance">0</div>
+                        <div class="stat-label">总距离(km)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="currentSpeed">0</div>
+                        <div class="stat-label">当前速度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="mapAccuracy">--</div>
+                        <div class="stat-label">定位精度</div>
+                    </div>
+                </div>
+            </div>
+            <div id="trajectoryMap"></div>
+
+            <!-- 新增：地图控制按钮 -->
+            <div class="map-controls">
+                <button class="map-control-btn clear" onclick="clearTrajectory()" id="clearBtn">
+                    <i class="fas fa-trash-alt"></i> 清除轨迹
+                </button>
+                <button class="map-control-btn save" onclick="saveMapAsImage()" id="saveBtn">
+                    <i class="fas fa-camera"></i> 保存地图快照
+                </button>
+                <button class="map-control-btn" onclick="exportTrajectoryData()" id="exportBtn">
+                    <i class="fas fa-file-export"></i> 导出轨迹数据
+                </button>
+            </div>
+        </div>
 
         <!-- 控制面板 -->
         <div class="card">
@@ -471,49 +643,462 @@
     </div>
 
     <script>
-        // ==================== 全局变量 ====================
+        // ==================== 新增：地图相关全局变量 ====================
+        let map = null;
+        let trajectoryLayer = null;       // 轨迹线图层
+        let markerLayer = null;          // 标记点图层
+        let currentMarker = null;        // 当前位置标记
+        let accuracyCircle = null;       // 精度圈
+        let positionHistory = [];
+        let totalDistance = 0;
+        let savedTrajectory = null;      // 保存的轨迹线
+        let savedMarkers = [];           // 保存的标记点
+
+        // ==================== 原有的全局变量 ====================
         let watchId = null;
         let lastPosition = null;
         let weatherUpdateInterval = null;
 
-        // ==================== 工具函数 ====================
+        // ==================== 新增：GCJ-02坐标转换函数 ====================
+        // WGS-84 转 GCJ-02（火星坐标）
+        function wgs84ToGcj02(lng, lat) {
+            const a = 6378245.0; // 长半轴
+            const ee = 0.00669342162296594323; // 扁率
+
+            if (outOfChina(lng, lat)) {
+                return [lng, lat];
+            }
+
+            let dlat = transformLat(lng - 105.0, lat - 35.0);
+            let dlng = transformLng(lng - 105.0, lat - 35.0);
+
+            const radlat = lat / 180.0 * Math.PI;
+            let magic = Math.sin(radlat);
+            magic = 1 - ee * magic * magic;
+            const sqrtmagic = Math.sqrt(magic);
+
+            dlat = (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * Math.PI);
+            dlng = (dlng * 180.0) / (a / sqrtmagic * Math.cos(radlat) * Math.PI);
+
+            const mglat = lat + dlat;
+            const mglng = lng + dlng;
+
+            return [mglng, mglat];
+        }
+
+        function outOfChina(lng, lat) {
+            return (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271);
+        }
+
+        function transformLat(x, y) {
+            let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+            ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0;
+            ret += (160.0 * Math.sin(y / 12.0 * Math.PI) + 320 * Math.sin(y * Math.PI / 30.0)) * 2.0 / 3.0;
+            return ret;
+        }
+
+        function transformLng(x, y) {
+            let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+            ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0;
+            ret += (150.0 * Math.sin(x / 12.0 * Math.PI) + 300.0 * Math.sin(x / 30.0 * Math.PI)) * 2.0 / 3.0;
+            return ret;
+        }
+
+        // ==================== 新增：地图相关函数 ====================
+        function initMap(lat, lon) {
+            if (!map) {
+                map = L.map('trajectoryMap').setView([lat, lon], 15);
+
+                // 使用高德地图瓦片
+                L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                    subdomains: ['1', '2', '3', '4'],
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="http://ditu.amap.com/">高德地图</a>'
+                }).addTo(map);
+
+                // 创建两个独立的图层
+                trajectoryLayer = L.layerGroup().addTo(map);    // 轨迹线图层
+                markerLayer = L.layerGroup().addTo(map);        // 标记点图层
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // ==================== 新增：清除轨迹函数 ====================
+        function clearTrajectory() {
+            if (confirm('确定要清除所有轨迹点吗？此操作不可恢复。')) {
+                // 清除图层
+                if (trajectoryLayer) {
+                    trajectoryLayer.clearLayers();
+                }
+
+                // 清除标记层（除了当前标记）
+                if (markerLayer) {
+                    // 先移除所有标记
+                    markerLayer.clearLayers();
+
+                    // 如果当前有标记，重新添加
+                    if (currentMarker && map) {
+                        markerLayer.addLayer(currentMarker);
+                    }
+                }
+
+                // 清除保存的轨迹和标记
+                savedTrajectory = null;
+                savedMarkers = [];
+
+                // 重置统计数据
+                positionHistory = [];
+                totalDistance = 0;
+
+                // 更新统计显示
+                document.getElementById('totalPoints').textContent = '0';
+                document.getElementById('totalDistance').textContent = '0.00';
+                document.getElementById('currentSpeed').textContent = '0.0 km/h';
+                document.getElementById('mapAccuracy').textContent = '--';
+
+                updateStatus('已清除所有轨迹点', 'success');
+            }
+        }
+
+        // ==================== 修改后的：保存地图为图片函数 ====================
+        function saveMapAsImage() {
+            updateStatus('正在生成地图快照...', 'loading');
+
+            try {
+                // 获取地图容器
+                const mapContainer = document.getElementById('trajectoryMap');
+
+                // 临时隐藏控制按钮
+                const controls = document.querySelector('.map-controls');
+                const originalDisplay = controls.style.display;
+                controls.style.display = 'none';
+
+                // 临时调整地图大小以确保完整显示
+                const originalHeight = mapContainer.style.height;
+                const originalWidth = mapContainer.style.width;
+                mapContainer.style.height = '400px';
+                mapContainer.style.width = '100%';
+
+                // 关键修复：确保地图完成渲染
+                setTimeout(() => {
+                    // 强制地图重新渲染以确保所有元素可见
+                    if (map) {
+                        map.invalidateSize();
+                    }
+
+                    // 再次延迟确保渲染完成
+                    setTimeout(() => {
+                        // 使用html2canvas截图
+                        html2canvas(mapContainer, {
+                            backgroundColor: '#f0f0f0', // 添加背景色
+                            scale: 2, // 提高分辨率
+                            useCORS: true,
+                            logging: false,
+                            allowTaint: true,
+                            onclone: function(clonedDoc) {
+                                // 在克隆的文档中确保地图容器可见
+                                const clonedMap = clonedDoc.getElementById('trajectoryMap');
+                                if (clonedMap) {
+                                    clonedMap.style.visibility = 'visible';
+                                    clonedMap.style.opacity = '1';
+                                }
+                            }
+                        }).then(canvas => {
+                            // 恢复原始样式
+                            mapContainer.style.height = originalHeight;
+                            mapContainer.style.width = originalWidth;
+                            controls.style.display = originalDisplay;
+
+                            // 创建下载链接
+                            const link = document.createElement('a');
+                            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                            const filename = `gps轨迹地图_${timestamp}.png`;
+
+                            link.download = filename;
+                            link.href = canvas.toDataURL('image/png');
+
+                            // 触发下载
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                            updateStatus('地图快照已保存为 ' + filename, 'success');
+                        }).catch(error => {
+                            console.error('截图失败:', error);
+                            mapContainer.style.height = originalHeight;
+                            mapContainer.style.width = originalWidth;
+                            controls.style.display = originalDisplay;
+                            updateStatus('截图失败: ' + error.message, 'error');
+                        });
+                    }, 500);
+                }, 500);
+
+            } catch (error) {
+                console.error('保存地图失败:', error);
+                updateStatus('保存地图失败: ' + error.message, 'error');
+
+                // 确保样式恢复
+                const mapContainer = document.getElementById('trajectoryMap');
+                if (mapContainer) {
+                    mapContainer.style.height = originalHeight;
+                    mapContainer.style.width = originalWidth;
+                }
+                if (controls) {
+                    controls.style.display = originalDisplay;
+                }
+            }
+        }
+
+        // ==================== 新增：导出轨迹数据函数 ====================
+        function exportTrajectoryData() {
+            if (positionHistory.length === 0) {
+                updateStatus('没有轨迹数据可导出', 'warning');
+                return;
+            }
+
+            try {
+                // 准备数据
+                const exportData = {
+                    metadata: {
+                        exportDate: new Date().toISOString(),
+                        totalPoints: positionHistory.length,
+                        totalDistance: totalDistance.toFixed(2),
+                        coordinateSystem: 'WGS84'
+                    },
+                    positions: positionHistory.map((point, index) => ({
+                        index: index + 1,
+                        timestamp: point.time.toISOString(),
+                        latitude: point.lat,
+                        longitude: point.lon,
+                        gcjLatitude: point.gcjLat,
+                        gcjLongitude: point.gcjLon,
+                        accuracy: point.accuracy,
+                        speed: point.speed,
+                        distanceFromStart: index === 0 ? 0 : calculateDistance(
+                            positionHistory[0].lat, positionHistory[0].lon,
+                            point.lat, point.lon
+                        ).toFixed(2)
+                    }))
+                };
+
+                // 创建JSON文件
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.download = `gps轨迹数据_${timestamp}.json`;
+                link.href = URL.createObjectURL(dataBlob);
+
+                // 触发下载
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // 清理URL
+                setTimeout(() => URL.revokeObjectURL(link.href), 100);
+
+                updateStatus(`轨迹数据已导出，共${positionHistory.length}个点`, 'success');
+
+            } catch (error) {
+                console.error('导出数据失败:', error);
+                updateStatus('导出数据失败: ' + error.message, 'error');
+            }
+        }
+
+        // ==================== 修改后的地图更新函数 ====================
+        function updateMapWithNewPosition(position, locationName) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            const speed = position.coords.speed || 0;
+
+            // 坐标转换：WGS84 -> GCJ-02
+            const [gcjLng, gcjLat] = wgs84ToGcj02(lon, lat);
+
+            if (!map) {
+                initMap(gcjLat, gcjLng);
+            }
+
+            // 计算距离（使用原始WGS84坐标）
+            if (positionHistory.length > 0) {
+                const lastPos = positionHistory[positionHistory.length - 1];
+                const distance = calculateDistance(
+                    lastPos.lat, lastPos.lon,
+                    lat, lon
+                );
+                totalDistance += distance;
+                document.getElementById('totalDistance').textContent = (totalDistance / 1000).toFixed(2);
+            }
+
+            // 保存数据（同时保存原始坐标和转换后的坐标）
+            positionHistory.push({
+                lat: lat,           // 原始WGS84纬度
+                lon: lon,           // 原始WGS84经度
+                gcjLat: gcjLat,     // 转换后的GCJ纬度
+                gcjLon: gcjLng,     // 转换后的GCJ经度
+                time: new Date(),
+                accuracy: accuracy,
+                speed: speed
+            });
+
+            if (positionHistory.length > 1000) { // 增加最大点数
+                positionHistory.shift();
+            }
+
+            // 更新统计
+            document.getElementById('totalPoints').textContent = positionHistory.length;
+            document.getElementById('currentSpeed').textContent = speed ? (speed * 3.6).toFixed(1) + ' km/h' : '0.0 km/h';
+            document.getElementById('mapAccuracy').textContent = accuracy ? accuracy.toFixed(1) + ' m' : '--';
+
+            // ========== 关键修改：不再清除轨迹，而是更新轨迹 ==========
+
+            // 移除旧的轨迹线（如果存在）
+            if (savedTrajectory && trajectoryLayer) {
+                trajectoryLayer.removeLayer(savedTrajectory);
+            }
+
+            // 移除旧的标记（除了当前标记）
+            if (savedMarkers.length > 0 && markerLayer) {
+                savedMarkers.forEach(marker => {
+                    markerLayer.removeLayer(marker);
+                });
+                savedMarkers = [];
+            }
+
+            // 绘制新的轨迹线（使用GCJ坐标，增加线宽和颜色对比度）
+            if (positionHistory.length >= 2) {
+                const latLngs = positionHistory.map(p => [p.gcjLat, p.gcjLon]);
+                savedTrajectory = L.polyline(latLngs, {
+                    color: '#e74c3c', // 改为更醒目的红色
+                    weight: 5,        // 增加线宽
+                    opacity: 0.9,     // 增加不透明度
+                    lineJoin: 'round',
+                    lineCap: 'round',
+                    dashArray: null   // 确保不是虚线
+                });
+                trajectoryLayer.addLayer(savedTrajectory);
+
+                // 标记轨迹点（每隔5个点标记一个）
+                positionHistory.forEach((point, index) => {
+                    if (index % 5 === 0 || index === positionHistory.length - 1) {
+                        const color = index === positionHistory.length - 1 ? '#e74c3c' : '#2ecc71';
+                        const radius = index === positionHistory.length - 1 ? 8 : 4;
+                        const marker = L.circleMarker([point.gcjLat, point.gcjLon], {
+                            radius: radius,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                        markerLayer.addLayer(marker);
+                        savedMarkers.push(marker);
+                    }
+                });
+            }
+
+            // 移除旧的当前位置标记
+            if (currentMarker && markerLayer) {
+                markerLayer.removeLayer(currentMarker);
+            }
+
+            // 移除旧的精度圈
+            if (accuracyCircle && markerLayer) {
+                markerLayer.removeLayer(accuracyCircle);
+            }
+
+            // 创建新的当前位置标记（使用GCJ坐标）
+            currentMarker = L.marker([gcjLat, gcjLng], {
+                icon: L.divIcon({
+                    className: 'current-location-marker',
+                    html: '<div style="background-color: #e74c3c; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            });
+            markerLayer.addLayer(currentMarker);
+
+            // 创建新的精度圈（使用GCJ坐标）
+            if (accuracy) {
+                accuracyCircle = L.circle([gcjLat, gcjLng], {
+                    radius: accuracy,
+                    color: '#3498db',
+                    fillColor: '#3498db',
+                    fillOpacity: 0.1,
+                    weight: 1
+                });
+                markerLayer.addLayer(accuracyCircle);
+            }
+
+            // 自动放大到合适级别
+            let zoomLevel = 15; // 默认15级
+            if (accuracy < 10) {
+                zoomLevel = 17;
+            } else if (accuracy < 50) {
+                zoomLevel = 16;
+            } else if (accuracy < 200) {
+                zoomLevel = 15;
+            } else {
+                zoomLevel = 14;
+            }
+            zoomLevel = Math.min(zoomLevel, 19);
+
+            // 更新地图视图（平滑移动并放大）
+            map.setView([gcjLat, gcjLng], zoomLevel, {
+                animate: true,
+                duration: 1.5,
+                easeLinearity: 0.25
+            });
+
+            // 添加弹出信息
+            currentMarker.bindPopup(`
+                <b>当前位置</b><br>
+                原始经度: ${lon.toFixed(6)}<br>
+                原始纬度: ${lat.toFixed(6)}<br>
+                转换经度: ${gcjLng.toFixed(6)}<br>
+                转换纬度: ${gcjLat.toFixed(6)}<br>
+                精度: ${accuracy.toFixed(1)}米<br>
+                速度: ${speed ? (speed * 3.6).toFixed(1) + ' km/h' : '静止'}<br>
+                时间: ${new Date().toLocaleTimeString()}<br>
+                轨迹点: ${positionHistory.length}<br>
+                总距离: ${(totalDistance / 1000).toFixed(2)}km<br>
+                ${locationName ? `位置: ${locationName.split(',')[0]}` : ''}
+            `).openPopup();
+        }
+
+        // ==================== 原有的工具函数 ====================
         function updateStatus(message, type = 'info') {
             const statusEl = document.getElementById('status');
             statusEl.innerHTML = message;
             statusEl.className = '';
-
             switch(type) {
-                case 'success':
-                    statusEl.classList.add('status-success');
-                    break;
-                case 'error':
-                    statusEl.classList.add('status-error');
-                    break;
+                case 'success': statusEl.classList.add('status-success'); break;
+                case 'error': statusEl.classList.add('status-error'); break;
                 case 'loading':
                     statusEl.innerHTML = `<span class="loading-spinner"></span>${message}`;
-                    statusEl.classList.add('status-loading');
-                    break;
-                case 'warning':
+                    statusEl.classList.add('status-loading'); break;
+                case 'warning': statusEl.classList.add('status-warning'); break;
+                case 'stopped':
                     statusEl.classList.add('status-warning');
+                    statusEl.innerHTML = `<i class="fas fa-pause-circle"></i> ${message}`;
                     break;
-                default:
-                    // 保持默认样式
             }
-        }
-
-        function getWeatherEmoji(weatherCode) {
-            const emojiMap = {
-                'clear': '☀️', 'sunny': '☀️',
-                'cloud': '☁️', 'cloudy': '☁️',
-                'rain': '🌧️', 'rainy': '🌧️',
-                'storm': '⛈️', 'thunderstorm': '⛈️',
-                'snow': '❄️', 'snowy': '❄️',
-                'fog': '🌫️', 'mist': '🌫️',
-                'wind': '💨', 'windy': '💨',
-                'default': '🌤️'
-            };
-
-            return emojiMap[weatherCode] || emojiMap.default;
         }
 
         function getWindDirection(degrees) {
@@ -527,17 +1112,13 @@
             return '西北风';
         }
 
-        // ==================== 空气质量API函数 ====================
+        // ==================== 原有的API函数 ====================
         async function fetchAirQualityData(lat, lon) {
             try {
-                // 使用Open-Meteo空气质量API (完全免费，无需API Key)
                 const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,dust,aerosol_optical_depth`;
-
                 const response = await fetch(aqiUrl);
                 if (!response.ok) throw new Error('空气质量API请求失败');
-
                 const data = await response.json();
-
                 return {
                     aqi: data.current.us_aqi || 0,
                     pm25: data.current.pm2_5 || 0,
@@ -550,33 +1131,20 @@
                 };
             } catch (error) {
                 console.warn('获取空气质量数据失败，使用估算数据:', error);
-                // 备用方案：基于天气和位置估算空气质量
                 return estimateAirQuality(lat, lon);
             }
         }
 
         function estimateAirQuality(lat, lon) {
-            // 基于地理位置、季节和天气估算空气质量
             const now = new Date();
             const month = now.getMonth() + 1;
             const hour = now.getHours();
-
-            // 基础AQI值
             let baseAqi = 30;
-
-            // 城市区域通常空气质量较差
-            if (Math.abs(lat - 40) < 5 && Math.abs(lon - 116) < 5) baseAqi += 20; // 北京附近
-            if (Math.abs(lat - 31) < 5 && Math.abs(lon - 121) < 5) baseAqi += 15; // 上海附近
-
-            // 季节影响：冬季空气质量通常较差
+            if (Math.abs(lat - 40) < 5 && Math.abs(lon - 116) < 5) baseAqi += 20;
+            if (Math.abs(lat - 31) < 5 && Math.abs(lon - 121) < 5) baseAqi += 15;
             if (month >= 11 || month <= 2) baseAqi += 15;
-
-            // 时间影响：早晚通勤时段空气质量较差
             if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) baseAqi += 10;
-
-            // 随机波动
             baseAqi += Math.random() * 20;
-
             return {
                 aqi: Math.round(baseAqi),
                 pm25: Math.round(baseAqi * 0.7 + Math.random() * 15),
@@ -607,12 +1175,11 @@
                 { name: "二氧化氮", value: aqiData.no2 },
                 { name: "二氧化硫", value: aqiData.so2 }
             ];
-
             pollutants.sort((a, b) => b.value - a.value);
             return pollutants[0].name;
         }
 
-        // ==================== 生活建议生成函数 ====================
+        // ==================== 原有的生活建议函数 ====================
         function generateLifeAdvice(weatherData, aqiData, locationName) {
             const temp = weatherData.temperature;
             const humidity = weatherData.humidity;
@@ -622,7 +1189,6 @@
             const aqi = aqiData.aqi;
             const month = new Date().getMonth() + 1;
 
-            // 1. 感冒风险判断
             let coldRisk = "低";
             let coldReason = "";
             if (temp < 10 && humidity > 70) {
@@ -638,7 +1204,6 @@
                 coldReason = "天气条件较好，感冒风险低";
             }
 
-            // 2. 补水建议
             let hydrationAdvice = "";
             if (temp > 28) {
                 hydrationAdvice = "气温较高，需要及时补充水分，建议每小时饮水200-300ml";
@@ -650,7 +1215,6 @@
                 hydrationAdvice = "温湿度适宜，保持正常饮水量即可";
             }
 
-            // 3. 口罩建议
             let maskAdvice = "";
             if (aqi > 150) {
                 maskAdvice = "空气质量差，建议佩戴N95口罩外出";
@@ -662,7 +1226,6 @@
                 maskAdvice = "空气质量良好，一般无需佩戴口罩";
             }
 
-            // 4. 雨具建议
             let umbrellaAdvice = "";
             if (weatherDesc.includes('雨') || weatherDesc.includes('雪')) {
                 umbrellaAdvice = "有降水，建议携带雨具";
@@ -674,7 +1237,6 @@
                 umbrellaAdvice = "天气晴朗，无需雨具";
             }
 
-            // 5. 运动建议
             let sportAdvice = "";
             if (aqi > 150) {
                 sportAdvice = "空气质量差，不建议户外运动";
@@ -692,17 +1254,15 @@
                 sportAdvice = "天气条件尚可，适合散步、慢跑等中等强度运动，运动前要注意热身，不要受伤了。";
             }
 
-            // 6. 观星建议
             let stargazingAdvice = "";
             const isNight = new Date().getHours() >= 18 || new Date().getHours() <= 6;
-
             if (!isNight) {
                 stargazingAdvice = "现在是白天，不适合观星哦~不过地球的另一端可以看得到";
             } else if (weatherDesc.includes('晴') && !weatherDesc.includes('云')) {
                 if (visibility > 8 && aqi < 80) {
                     stargazingAdvice = "★★★★★ 观星条件极佳，夜空清澈。悠闲的时候，躺在草坪上仰望星空，或许是生活中不错的调节呢";
                 } else {
-                    stargazingAdvice = "★★★☆☆ 晴天但能见度一般，可以观测主要星座。               “北斗七星，是在那个位置吗？”";
+                    stargazingAdvice = "★★★☆☆ 晴天但能见度一般，可以观测主要星座。               \"北斗七星，是在那个位置吗？\"";
                 }
             } else if (weatherDesc.includes('云') || weatherDesc.includes('阴')) {
                 stargazingAdvice = "★☆☆☆☆ 多云/阴天，不适合观星";
@@ -712,10 +1272,7 @@
                 stargazingAdvice = "★★☆☆☆ 天气条件一般，观星效果有限";
             }
 
-            // 7. 应季水果推荐
             const fruitRecommendation = getSeasonalFruits(month, temp, humidity);
-
-            // 8. 花卉推荐
             const flowerRecommendation = getSeasonalFlowers(month, locationName);
 
             return {
@@ -747,12 +1304,10 @@
             };
 
             const monthData = seasonalFruits[month] || seasonalFruits[1];
-
             let additionalAdvice = "";
             if (temp > 30) additionalAdvice = "建议多吃西瓜、哈密瓜等含水量高的水果防暑";
             if (humidity > 80) additionalAdvice = "湿气重，建议适量吃些橙子、柚子等柑橘类水果";
             if (temp < 10) additionalAdvice = "天气冷，可将水果稍微加热后食用，直接吃可能有点冰~";
-
             return `本月推荐: ${monthData.fruits.join("、")}。<br>${monthData.reason}${additionalAdvice ? `<br>${additionalAdvice}` : ''}`;
         }
 
@@ -773,27 +1328,21 @@
             };
 
             const flowers = seasonalFlowers[month] || seasonalFlowers[1];
-
             let locationHint = "";
             if (locationName.includes("北京")) locationHint = "北京植物园、颐和园是观赏的好去处";
             if (locationName.includes("上海")) locationHint = "上海植物园、辰山植物园值得一游";
             if (locationName.includes("广州")) locationHint = "华南植物园有丰富的花卉资源";
-
             return `本月观赏: ${flowers.join("、")}正在开放,可以去交大植物园蔷薇园逛逛，说不定有意外惊喜哦~。${locationHint ? `<br>${locationHint}` : ''}`;
         }
 
-        // ==================== 免费天气API函数 ====================
+        // ==================== 原有的天气API函数 ====================
         async function fetchFreeWeatherData(lat, lon) {
             updateStatus('正在获取免费天气数据...', 'loading');
-
             try {
                 const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code&hourly=temperature_2m&timezone=auto`;
-
                 const response = await fetch(openMeteoUrl);
                 if (!response.ok) throw new Error('天气API请求失败');
-
                 const data = await response.json();
-
                 const weatherInfo = {
                     temperature: data.current.temperature_2m,
                     feelsLike: data.current.apparent_temperature,
@@ -804,14 +1353,11 @@
                     weatherCode: data.current.weather_code,
                     timestamp: new Date().toISOString()
                 };
-
                 const weatherDetails = interpretWeatherCode(weatherInfo.weatherCode);
                 weatherInfo.description = weatherDetails.description;
                 weatherInfo.icon = weatherDetails.icon;
                 weatherInfo.cardClass = weatherDetails.cardClass;
-
                 return weatherInfo;
-
             } catch (error) {
                 console.error('获取天气失败:', error);
                 return getEstimatedWeather(lat, lon);
@@ -841,35 +1387,24 @@
                 95: { description: '雷暴', icon: '⛈️', cardClass: 'weather-card-rainy' },
                 99: { description: '强雷暴', icon: '⛈️', cardClass: 'weather-card-rainy' }
             };
-
-            return weatherMap[code] || {
-                description: '未知天气',
-                icon: '🌤️',
-                cardClass: 'weather-card-default'
-            };
+            return weatherMap[code] || { description: '未知天气', icon: '🌤️', cardClass: 'weather-card-default' };
         }
 
         function getEstimatedWeather(lat, lon) {
             const now = new Date();
             const month = now.getMonth() + 1;
             const hour = now.getHours();
-
             let baseTemp = 20 - Math.abs(lat - 30) * 0.5;
-
             if (month >= 12 || month <= 2) baseTemp -= 10;
             if (month >= 6 && month <= 8) baseTemp += 10;
             if (hour >= 20 || hour <= 6) baseTemp -= 5;
-
             const temp = Math.round(baseTemp + (Math.random() * 6 - 3));
-
             const weatherTypes = [
                 { desc: '晴朗', icon: '☀️', class: 'weather-card-sunny', humidity: 40 },
                 { desc: '多云', icon: '☁️', class: 'weather-card-cloudy', humidity: 60 },
                 { desc: '局部多云', icon: '⛅', class: 'weather-card-clear', humidity: 50 }
             ];
-
             const weather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
-
             return {
                 temperature: temp,
                 feelsLike: temp - (weather.humidity > 60 ? 2 : 0),
@@ -885,26 +1420,19 @@
             };
         }
 
-        // ==================== 位置名称查询 ====================
+        // ==================== 原有的位置名称函数 ====================
         async function fetchLocationName(lat, lon) {
             try {
                 const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`;
-
                 const response = await fetch(url, {
-                    headers: {
-                        'User-Agent': 'GPSWeatherApp/1.0'
-                    }
+                    headers: { 'User-Agent': 'GPSWeatherApp/1.0' }
                 });
-
                 if (response.ok) {
                     const data = await response.json();
                     const locationName = data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-
                     document.getElementById('locationName').textContent = locationName;
-                    document.getElementById('weatherLocationText').textContent =
-                        locationName.split(',')[0];
+                    document.getElementById('weatherLocationText').textContent = locationName.split(',')[0];
                     document.getElementById('locationInfo').style.display = 'block';
-
                     return locationName;
                 }
             } catch (error) {
@@ -917,70 +1445,47 @@
             }
         }
 
-        // ==================== 显示天气和空气质量数据 ====================
+        // ==================== 原有的显示函数 ====================
         async function displayWeatherAndAirQuality(lat, lon, weather, locationName) {
-            // 获取空气质量数据
             const aqiData = await fetchAirQualityData(lat, lon);
-
-            // 显示天气数据
             displayWeatherData(weather);
-
-            // 显示空气质量数据
             displayAirQualityData(aqiData);
-
-            // 生成并显示生活建议
             const advice = generateLifeAdvice(weather, aqiData, locationName);
             displayLifeAdvice(advice);
         }
 
         function displayWeatherData(weather) {
             document.getElementById('weatherIcon').textContent = weather.icon;
-            document.getElementById('temperature').textContent =
-                Math.round(weather.temperature) + '°C';
+            document.getElementById('temperature').textContent = Math.round(weather.temperature) + '°C';
             document.getElementById('weatherDescription').textContent = weather.description;
-
             const weatherCard = document.getElementById('weatherCard');
             weatherCard.className = 'weather-main ' + weather.cardClass;
-
-            document.getElementById('feelsLike').textContent =
-                Math.round(weather.feelsLike) + '°C';
+            document.getElementById('feelsLike').textContent = Math.round(weather.feelsLike) + '°C';
             document.getElementById('humidity').textContent = weather.humidity + '%';
             document.getElementById('pressure').textContent = weather.pressure + ' hPa';
             document.getElementById('windSpeed').textContent = weather.windSpeed + ' m/s';
-            document.getElementById('windDirection').textContent =
-                getWindDirection(weather.windDirection) + ` (${weather.windDirection}°)`;
-            document.getElementById('visibility').textContent =
-                (10 - weather.humidity / 20).toFixed(1) + ' 公里';
-
-            const updateTime = new Date().toLocaleTimeString();
-            document.getElementById('weatherUpdateTime').textContent = updateTime;
-
+            document.getElementById('windDirection').textContent = getWindDirection(weather.windDirection) + ` (${weather.windDirection}°)`;
+            document.getElementById('visibility').textContent = (10 - weather.humidity / 20).toFixed(1) + ' 公里';
+            document.getElementById('weatherUpdateTime').textContent = new Date().toLocaleTimeString();
             if (weather.isEstimated) {
-                document.getElementById('weatherLocationText').innerHTML +=
-                    ' <span style="color:#e74c3c;font-size:0.8em;">(估算天气)</span>';
+                document.getElementById('weatherLocationText').innerHTML += ' <span style="color:#e74c3c;font-size:0.8em;">(估算天气)</span>';
             }
         }
 
         function displayAirQualityData(aqiData) {
             document.getElementById('aqiValue').textContent = aqiData.aqi;
             document.getElementById('pm25Value').textContent = aqiData.pm25.toFixed(1) + ' μg/m³';
-
             const aqiLevel = getAQILevel(aqiData.aqi);
             document.getElementById('aqiLevel').textContent = aqiLevel.level;
-
             const mainPollutant = getMainPollutant(aqiData);
             document.getElementById('mainPollutant').textContent = mainPollutant;
-
-            // 显示AQI指示器
             const aqiIndicator = document.getElementById('aqiIndicator');
             const aqiColorIndicator = document.getElementById('aqiColorIndicator');
             const aqiDescription = document.getElementById('aqiDescription');
-
             aqiColorIndicator.textContent = aqiLevel.level;
             aqiColorIndicator.className = `aqi-level ${aqiLevel.color}`;
             aqiDescription.textContent = aqiLevel.desc;
             aqiIndicator.style.display = 'flex';
-
             if (aqiData.isEstimated) {
                 aqiDescription.textContent += ' (基于估算数据)';
             }
@@ -997,73 +1502,36 @@
             document.getElementById('flowerRecommendation').innerHTML = advice.flowerRecommendation;
         }
 
-        // ==================== 主要GPS函数 ====================
-        function startTracking() {
-            if (watchId) return;
-
-            updateStatus('请求定位权限中...', 'loading');
-
-            if (!navigator.geolocation) {
-                updateStatus('错误: 您的浏览器不支持定位功能', 'error');
-                return;
-            }
-
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-
-            watchId = navigator.geolocation.watchPosition(
-                onPositionSuccess,
-                onPositionError,
-                {
-                    enableHighAccuracy: true,
-                    maximumAge: 0,
-                    timeout: 15000
-                }
-            );
-
-            updateStatus('正在获取初始位置...', 'loading');
-        }
-
-        function stopTracking() {
-            if (watchId) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-
-            if (weatherUpdateInterval) {
-                clearInterval(weatherUpdateInterval);
-                weatherUpdateInterval = null;
-            }
-
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            updateStatus('已停止追踪', 'stopped');
-        }
-
+        // ==================== 修改后的主定位函数 ====================
         async function onPositionSuccess(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-
             lastPosition = { lat, lon };
 
+            // 更新GPS数据显示
             document.getElementById('latitude').textContent = lat.toFixed(6);
             document.getElementById('longitude').textContent = lon.toFixed(6);
-            document.getElementById('altitude').textContent =
-                position.coords.altitude ? position.coords.altitude.toFixed(1) + ' 米' : '--';
-            document.getElementById('speed').textContent =
-                position.coords.speed ? position.coords.speed.toFixed(2) + ' 米/秒' : '0.00 米/秒';
+            document.getElementById('altitude').textContent = position.coords.altitude ? position.coords.altitude.toFixed(1) + ' 米' : '--';
+            document.getElementById('speed').textContent = position.coords.speed ? (position.coords.speed * 3.6).toFixed(2) + ' km/h' : '0.00 km/h';
             document.getElementById('accuracy').textContent = position.coords.accuracy.toFixed(1) + ' 米';
             document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
 
             updateStatus('定位成功，正在获取天气和空气质量信息...', 'success');
 
+            // 获取位置名称
             const locationName = await fetchLocationName(lat, lon);
+
+            // 更新地图轨迹
+            updateMapWithNewPosition(position, locationName);
+
+            // 获取天气数据
             const weatherData = await fetchFreeWeatherData(lat, lon);
 
             if (weatherData) {
                 await displayWeatherAndAirQuality(lat, lon, weatherData, locationName);
             }
 
+            // 设置定时更新
             if (!weatherUpdateInterval) {
                 weatherUpdateInterval = setInterval(async () => {
                     if (lastPosition) {
@@ -1077,6 +1545,24 @@
             }
         }
 
+        // ==================== 原有的控制函数 ====================
+        function startTracking() {
+            if (watchId) return;
+            updateStatus('请求定位权限中...', 'loading');
+            if (!navigator.geolocation) {
+                updateStatus('错误: 您的浏览器不支持定位功能', 'error');
+                return;
+            }
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            watchId = navigator.geolocation.watchPosition(
+                onPositionSuccess,
+                onPositionError,
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+            );
+            updateStatus('正在获取初始位置...', 'loading');
+        }
+
         function onPositionError(error) {
             let message = '定位失败: ';
             switch(error.code) {
@@ -1086,15 +1572,54 @@
                 default: message += '未知错误';
             }
             updateStatus(message, 'error');
-
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
+        }
+
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            if (weatherUpdateInterval) {
+                clearInterval(weatherUpdateInterval);
+                weatherUpdateInterval = null;
+            }
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            updateStatus('已停止追踪', 'stopped');
+            if (currentMarker) {
+                currentMarker.bindPopup('<b>已停止追踪</b><br>最后位置已标记').openPopup();
+            }
         }
 
         // ==================== 页面初始化 ====================
         document.addEventListener('DOMContentLoaded', function() {
             updateStatus('系统就绪，点击"开始定位与获取天气"按钮启动', 'info');
 
+            // 初始化地图（使用高德地图，默认显示中国）
+            map = L.map('trajectoryMap').setView([39.9042, 116.4074], 10);
+            L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                subdomains: ['1', '2', '3', '4'],
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://ditu.amap.com/">高德地图</a>'
+            }).addTo(map);
+
+            // 初始化图层
+            trajectoryLayer = L.layerGroup().addTo(map);
+            markerLayer = L.layerGroup().addTo(map);
+
+            // 添加初始提示
+            L.marker([39.9042, 116.4074], {
+                icon: L.divIcon({
+                    className: 'start-hint',
+                    html: '<div style="background-color: #3498db; padding: 10px; border-radius: 5px; color: white; font-weight: bold;">点击开始定位以显示实时轨迹</div>',
+                    iconSize: [200, 40],
+                    iconAnchor: [100, 20]
+                })
+            }).addTo(markerLayer).bindPopup('开始定位后，您的实时轨迹将显示在这里').openPopup();
+
+            // 原有的键盘快捷键
             if (!navigator.geolocation) {
                 updateStatus('警告: 您的设备或浏览器不支持GPS定位', 'warning');
                 document.getElementById('startBtn').disabled = true;
@@ -1109,6 +1634,17 @@
                 if (e.key === 'Escape') {
                     if (!document.getElementById('stopBtn').disabled) {
                         stopTracking();
+                    }
+                }
+                // 新增快捷键：Ctrl+S保存地图，Ctrl+C清除轨迹
+                if (e.ctrlKey) {
+                    if (e.key === 's') {
+                        e.preventDefault();
+                        saveMapAsImage();
+                    }
+                    if (e.key === 'c') {
+                        e.preventDefault();
+                        clearTrajectory();
                     }
                 }
             });

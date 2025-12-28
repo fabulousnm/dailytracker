@@ -1,5 +1,8 @@
 #:kivy 2.0.0
 #:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import Clock kivy.clock.Clock
+#:import Factory kivy.factory.Factory
 <TabbedPanelItem>:#给按钮添加背景颜色，background_color: 0.69, 0.84, 0.88, 1.0
     background_normal: ''
     background_down: ''
@@ -52,7 +55,7 @@
 
     tab_width: root.width / 3
     TabbedPanelItem:
-        text: '时间( • ̀ω•́ )'
+        text: '  时间与AI'
         font_name:'simsun.ttc'
         color: 1, 1, 1, 1  # 纯白（RGBA值，Alpha=1表示不透明）
         bold:True
@@ -64,7 +67,7 @@
             app: root
 
     TabbedPanelItem:
-        text: '轨迹ψ(｀∇´)ψ'
+        text: '轨迹与新闻'
         font_name:'simsun.ttc'
         color: 1, 1, 1, 1  # 纯白（RGBA值，Alpha=1表示不透明）
         bold:True
@@ -75,7 +78,7 @@
             app: root
 
     TabbedPanelItem:
-        text: '个性( º﹃º )'
+        text: '个性与游戏'
         font_name:'simsun.ttc'
         color: 1, 1, 1, 1  # 纯白（RGBA值，Alpha=1表示不透明）
         bold:True
@@ -85,354 +88,821 @@
             id: personalization_tab
             app: root
 
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import Clock kivy.clock.Clock
+#:import Factory kivy.factory.Factory
+
+# ========== AI对话消息组件 ==========
+<ChatMessage>:
+    orientation: 'vertical'
+    spacing: 5
+    size_hint_y: None
+    height: self.minimum_height
+    padding: [8, 8, 8, 12]
+    disable_layout: False
+
+    canvas.before:
+        Color:
+            rgba: (0.584, 0.925, 0.412, 1.0) if root.role == 'user' else (1.0, 1.0, 1.0, 1.0)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]
+
+    Label:
+        id: msg_header
+        text: root.header_text
+        font_size: '12sp'
+        markup: True
+        size_hint: 1, None
+        height: self.texture_size[1] + 4
+        color: get_color_from_hex('#666666')
+        text_size: (self.width - 16, None)
+        halign: 'left'
+        valign: 'top'
+
+    Label:
+        id: msg_content
+        text: root.formatted_content
+        markup: True
+        font_size: '16sp'
+        color: get_color_from_hex('#000000')
+        size_hint: 1, None
+        height: self.texture_size[1]
+        text_size: (self.width - 16, None)
+        halign: 'left'
+        valign: 'top'
+        on_texture_size: root.update_height()
+
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import Clock kivy.clock.Clock
+#:import Factory kivy.factory.Factory
+
+# ========== AI对话消息组件 ==========
+<ChatMessage>:
+    orientation: 'vertical'
+    spacing: 5
+    size_hint_y: None
+    height: self.minimum_height
+    padding: [8, 8, 8, 12]
+    disable_layout: False
+
+    canvas.before:
+        Color:
+            rgba: (0.584, 0.925, 0.412, 1.0) if root.role == 'user' else (1.0, 1.0, 1.0, 1.0)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]
+
+    Label:
+        id: msg_header
+        text: root.header_text
+        font_size: '12sp'
+        markup: True
+        size_hint: 1, None
+        height: self.texture_size[1] + 4
+        color: get_color_from_hex('#666666')
+        text_size: (self.width - 16, None)
+        halign: 'left'
+        valign: 'top'
+
+    Label:
+        id: msg_content
+        text: root.formatted_content
+        markup: True
+        font_size: '16sp'
+        color: get_color_from_hex('#000000')
+        size_hint: 1, None
+        height: self.texture_size[1]
+        text_size: (self.width - 16, None)
+        halign: 'left'
+        valign: 'top'
+        on_texture_size: root.update_height()
+
+# ========== ScheduleTab（整合AI对话+备忘录+提醒） ==========
 <ScheduleTab>:
     orientation: 'vertical'
     padding: 20
     spacing: 10
-<ScheduleTab>:
+
     canvas.before:
         Rectangle:
             pos:self.pos
             size: self.size
-            source: 'assets/images/img.png'#scheduletabe的背景图
+            source: 'assets/images/img.png'
             tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
-        Color:#调整后续的元素的颜色，透明度等
-            rgba: 1, 1, 1, 0.5  # 白色 + 50%透明度
-        Rectangle:
-            pos: self.pos
-            size: self.size
-
-    Label:
-        text: '时间表'
-        font_name:'SIMYOU.TTF'
-        font_size: '24sp'
-        bold: True
-        size_hint_y: None
-        height: 50
-        color: get_color_from_hex('#6699FF')
-
-
-
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 60
-        spacing: 10
-
-        Label:
-            text: '        门扉时:'
-            bold:True
-            font_name:'SIMYOU.TTF'
-            font_size: '24sp'
-            color: 0, 0, 0, 1
-            size_hint_x: 0.5
-            halign: 'right'
-            color: get_color_from_hex('#6699FF')
-
-
-        Label:
-            id: wake_time_label
-            font_size: '18sp'
-            bold: True
-            size_hint_x: 0.5
-            halign: 'left'
-            color: get_color_from_hex('#6699FF')
-
-
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 60
-        spacing: 10
-
-        Label:
-            text: '      黎明时:'
-            font_size: '24sp'
-            font_name:'SIMYOU.TTF'
-            color: 0, 0, 0, 1
-            size_hint_x: 0.5
-            halign: 'right'
-            color: get_color_from_hex('#6699FF')
-
-
-        Label:#时间数据在user_json里面，现在还不知道怎么引用的
-            id: sleep_time_label
-
-            font_size: '18sp'
-            bold: True
-            color: 0.8, 0.2, 0.2, 1
-            size_hint_x: 0.5
-            halign: 'left'
-            color: get_color_from_hex('#6699FF')
-
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 60
-        spacing: 10
-
-        Label:
-            text: '               备忘录'#这是备忘录
-            font_size: '20sp'
-            font_name:'SIMYOU.TTF'
-            bold: True
-            size_hint_y: None
-            height: 40
-            halign: 'right'#左边的排版
-            color: get_color_from_hex('#e2695d')
-
-
-        Label:
-            text: '☺                     '
-            font_size: '24sp'
-            font_name:'seguiemj.ttf'#  font_name: "fonts/NotoSansCJK-Regular.ttf"  # 思源黑体（支持Unicode全字符）
-            bold: True
-            size_hint_y: None
-            height: 40
-            halign: 'left'
-            color: get_color_from_hex('#e2695d')
-
-
-
-    ScrollView:#备忘录的滑动效果
-        BoxLayout:
-            id: activity_container
-            orientation: 'vertical'
-            size_hint_y: None
-            height: self.minimum_height
-            spacing: 5
-
-<ActivityItem>:
-    orientation: 'vertical'
-    size_hint_y: None
-    height:
-    padding: 10
-    spacing: 5
-    canvas.before:
         Color:
-            rgba: 0.9, 0.9, 0.9, 0.3  # 更柔和的背景色
+            rgba: 1, 1, 1, 0.5
         Rectangle:
             pos: self.pos
             size: self.size
-    Label:
-        text: root.content
-        font_size: '14sp'
-        font_name: 'simsun.ttc'
-        text_size: self.width, None
-        halign: 'left'
-        valign: 'middle'
-        color: get_color_from_hex('#e2695d')
 
+    # AI对话区域
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 1, 0.6
+        spacing: 10
 
-#轨迹
-<TrackingTab>:
-    orientation: 'vertical'#垂直排列子控件
-    padding: 10
-    spacing: 10
-    canvas.before:
-        Rectangle:
-            pos:self.pos
-            size: self.size
-            source: 'assets/images/img.png'#scheduletabe的背景图
-            tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
-        Color:#调整后续的元素的颜色，透明度等
-            rgba: 1, 1, 1, 0.7  # 白色 + 50%透明度
-        Rectangle:
-            pos: self.pos
-            size: self.size
-    Image:
-        source: 'assets/xingye.png'  # 图片路径，这里可以实时刷新轨迹图？
-        size_hint: None, None  # 禁用自动缩放
-        size: 200, 200  # 固定尺寸（像素）
-        pos_hint: {'center_x': 0.5, 'top': 0.9}  # 水平居中，顶部向下10%
+        # 对话标题
+        Label:
+            text: 'AI对话助手'
+            font_name:'simkai.ttf'
+            font_size: '24sp'
+            bold: True
+            size_hint_y: None
+            height: 50
+            color: get_color_from_hex('#339B2C')
 
+        # 对话历史
+        ScrollView:
+            id: chat_history_container
+            do_scroll_x: False
+            do_scroll_y: True
+            scroll_y: 1.0
 
+            BoxLayout:
+                id: chat_box
+                orientation: 'vertical'
+                spacing: 10
+                padding: [10, 10, 10, 10]
+                size_hint_y: None
+                height: self.minimum_height
+
+        # 输入区域
+        BoxLayout:
+            size_hint_y: None
+            height: 60
+            spacing: 10
+            padding: [10, 0, 10, 0]
+
+            TextInput:
+                id: user_input
+                hint_text: "输入问题，按回车或点击发送..."
+                font_name: 'simsun.ttc'
+                font_size: 18
+                multiline: False
+                size_hint_y: None
+                height: 45
+                padding: [10, 5]
+                on_text_validate: root.send_message()
+
+            Button:
+                text: "发送"
+                font_size: 18
+                font_name: 'simsun.ttc'
+                background_color: get_color_from_hex('#6699FF')
+                size_hint_x: None
+                width: 80
+                size_hint_y: None
+                height: 45
+                on_press: root.send_message()
+
+    # 备忘录区域（带提醒功能）
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: 1, 0.4
+        spacing: 10
+        padding: 10
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: 60
+            spacing: 10
+
+            Label:
+                text: '                    备忘录'
+                font_size: '20sp'
+                font_name:'SIMYOU.TTF'
+                bold: True
+                size_hint_y: None
+                height: 40
+                halign: 'right'
+                color: get_color_from_hex('#e2695d')
+
+            Label:
+                text: '                  ⏰        '
+                font_size: '16sp'
+                font_name:'seguiemj.ttf'
+                bold: True
+                size_hint_y: None
+                height: 40
+                halign: 'center'
+                color: get_color_from_hex('#4a9eff')
+
+            Button:
+                text: '+ 添加事件'
+                font_size: '16sp'
+                font_name: 'SIMYOU.TTF'
+                size_hint_x: None
+                width: 120
+                background_color: (0.678, 0.847, 0.902, 0.1)
+                color: (1, 1, 1, 1)
+                on_press: root.show_add_popup()
+
+        ScrollView:
+            BoxLayout:
+                id: activity_container
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 8
+
+# ========== 备忘录相关组件 ==========
+<AddActivityPopup>:
+    title: "添加新事项"
+    title_font: 'simsun.ttc'
+    size_hint: (0.8, 0.6)
+    auto_dismiss: False
 
     BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 40
+        orientation: "vertical"
+        padding: 20
         spacing: 10
 
         Label:
-            text: '设置速度阈值(m/s):'
-            font_name:'simsun.ttc'
-            color: 0, 0, 0, 1
-            size_hint_x: 0.5
-
-        Slider:
-            id: speed_slider
-            min: 1
-            max: 15
-            value: 50
-            size_hint_x: 0.5
-
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: None
-        height: 40
-        spacing: 10
-
-        Label:
-            text: '设置为:'
-            font_name:'simsun.ttc'
-            color: 0, 0, 0, 1
-            size_hint_x: 0.5
-            color: get_color_from_hex('#FFFFFF')
-
-        Label:#目前这个显示的是阈值速度
-            id: threshold_speed_label
-            text: f'{speed_slider.value:.1f} m/s'  # 保留1位小数
-            color: get_color_from_hex('#FFFFFF')
+            text: "选择时间:"
             font_size: '16sp'
-            bold: True
-            size_hint_x: 0.5
-         # 在TrackingTab的布局中添加按钮
-
-
-    HTMLStyleButton:
-        text: '月落乌啼霜满天，江枫渔火对愁眠'
-        font_name:'simsun.ttc'
-        on_press: root.open_local_html(self)
-    Label:
-        text: '今天你的路径:'    #修改请见trackingtab 133行
-        font_name:'simsun.ttc'
-        font_size: '18sp'
-        bold: True
-        size_hint_y: None
-        height: 30
-        color: get_color_from_hex('#8076a3')
-
-    ScrollView:
-        BoxLayout:
-            id: location_logs
-            orientation: 'vertical'
+            font_name: 'simsun.ttc'
             size_hint_y: None
-            height: self.minimum_height
-            spacing:5
+            height: 30
 
-<LocationLogEntry>:
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 40
+            spacing: 10
+
+            TextInput:
+                id: hour_input
+                hint_text: "时 (00-23)"
+                font_name: 'simsun.ttc'
+                multiline: False
+                input_filter: "int"
+                font_size: '16sp'
+
+            Label:
+                text: ":"
+                font_size: '16sp'
+
+            TextInput:
+                id: minute_input
+                hint_text: "分 (00-59)"
+                font_name: 'simsun.ttc'
+                multiline: False
+                input_filter: "int"
+                font_size: '16sp'
+
+        Label:
+            text: "事件名称:"
+            font_size: '16sp'
+            font_name: 'simsun.ttc'
+            size_hint_y: None
+            height: 30
+
+        TextInput:
+            id: event_input
+            hint_text: "输入事件名称"
+            font_name: 'simsun.ttc'
+            multiline: False
+            font_size: '16sp'
+
+        Label:
+            text: "具体描述:"
+            font_size: '16sp'
+            font_name: 'simsun.ttc'
+            size_hint_y: None
+            height: 30
+
+        TextInput:
+            id: description_input
+            hint_text: "输入事件具体描述"
+            font_name: 'simsun.ttc'
+            multiline: True
+            font_size: '16sp'
+
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 40
+            spacing: 10
+
+            Button:
+                text: "取消"
+                font_size: '16sp'
+                font_name: 'simsun.ttc'
+                on_press: root.dismiss()
+
+            Button:
+                text: "确定"
+                font_size: '16sp'
+                font_name: 'simsun.ttc'
+                on_press: root.add_activity()
+
+# ========== ActivityItem（带提醒图标） ==========
+<ActivityItem>:
+    content: ""
+    time: ""
+    event: ""
+    description: ""
+    index: -1
+    parent_schedule: None
+    action_menu: None
     orientation: 'vertical'
     size_hint_y: None
-    height: 80
-    padding: 10
+    height: 90
+    padding: [10, 5]
     spacing: 5
+
     canvas.before:
         Color:
-            rgba: 0.969, 0.718, 0.773, 0 # rgb(247,183,197)，最后一个是透明度
+            rgba: (0.96, 0.96, 0.96, 0.1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10,]
+        Color:
+            rgba: (0.5, 0.5, 0.5, 0.1)
+        Line:
+            rounded_rectangle: [self.x, self.y, self.width, self.height, 10]
+            width: 1
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: 1
+        spacing: 10
+        padding: [0, 0, 10, 0]
+
+        # 左侧：时间 + 提醒图标
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: None
+            width: 70
+            spacing: 2
+
+            Label:
+                text: root.time
+                font_size: '20sp'
+                font_name: 'simsun.ttc'
+                color: get_color_from_hex('#f78850')
+                bold: True
+                halign: 'center'
+                valign: 'middle'
+
+            Label:
+                text: '⏰'
+                font_size: '12sp'
+                font_name: 'seguiemj.ttf'
+                color: get_color_from_hex('#4a9eff')
+                halign: 'center'
+                valign: 'middle'
+
+        # 中间：事件内容
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: 1
+            spacing: 2
+            padding: [5, 2, 5, 2]
+
+            Label:
+                id: event_label
+                text: root.event if root.event else root.content
+                font_size: '16sp'
+                font_name: 'simkai.ttf'
+                color: get_color_from_hex('#333333')
+                text_size: (self.width, None)
+                halign: 'left'
+                valign: 'middle'
+                size_hint_y: None
+                height: self.texture_size[1] if self.texture_size else 25
+
+            Label:
+                id: desc_label
+                text: root.description if root.description else ""
+                font_size: '13sp'
+                font_name: 'simkai.ttf'
+                color: get_color_from_hex('#666666')
+                text_size: (self.width - 10, None)
+                halign: 'left'
+                valign: 'top'
+                size_hint_y: None
+                height: self.texture_size[1] if self.texture_size else 0
+
+        # 右侧：菜单按钮
+        Button:
+            id: menu_btn
+            text: '⋮'
+            font_size: '24sp'
+            font_name: 'simkai.ttf'
+            size_hint: (None, None)
+            size: (45, 45)
+            background_color: (1, 1, 1, 0)
+            color: get_color_from_hex('#666666')
+            halign: 'center'
+            valign: 'middle'
+            on_press: root.show_action_menu()
+
+<ActionMenuOverlay>:
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 0.01
         Rectangle:
             pos: self.pos
             size: self.size
-#遍历文件中的数据，数据在activitytime中
-    Label:
-        text: root.location_text
-        font_size: '25sp'
-        font_name: 'simsun.ttc'  # 或系统存在的其他中文字体
-        bold: True
-        size_hint_y: None
-        height: 25
-        color: get_color_from_hex('#8076a3')
 
-    Label:
-        text: root.duration_text
-        font_size: '8 sp'
-        font_name: 'simsun.ttc'
-        size_hint_y: None
-        height: 20
-        color: get_color_from_hex('#8076a3')
+<ActionMenu>:
+    orientation: 'vertical'
+    size_hint: (None, None)
+    size: (120, 80)
+    spacing: 0
+    padding: 0
 
-    Label:
-        text: root.activity_text
-        font_size: '8 sp'
-        size_hint_y: None
-        height: 20
-        color: get_color_from_hex('#8076a3')
+    canvas.before:
+        Color:
+            rgba: (0.95, 0.95, 0.95, 0.98)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [5,]
+        Color:
+            rgba: (0.7, 0.7, 0.7, 1)
+        Line:
+            rounded_rectangle: [self.x, self.y, self.width, self.height, 5]
+            width: 1
 
+    Button:
+        id: edit_button
+        text: '编辑'
+        font_size: '13sp'
+        font_name: 'simkai.ttf'
+        size_hint_y: None
+        height: 40
+        background_color: (0.29, 0.62, 0.95, 1)
+        background_normal: ''
+        color: (1, 1, 1, 1)
+        on_press: root.edit_button_pressed()
+
+    Button:
+        id: delete_button
+        text: '删除'
+        font_size: '13sp'
+        font_name: 'simkai.ttf'
+        size_hint_y: None
+        height: 40
+        background_color: (0.89, 0.41, 0.36, 1)
+        background_normal: ''
+        color: (1, 1, 1, 1)
+        on_press: root.delete_button_pressed()
+
+<EditActivityPopup>:
+    title: '编辑事件'
+    title_font: 'simkai.ttf'
+    size_hint: (0.8, 0.6)
+    separator_height: 0
+
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: 10
+        padding: 20
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: 10
+            size_hint_y: None
+            height: 50
+
+            Label:
+                text: '时间:'
+                size_hint_x: None
+                width: 60
+                font_size: '16sp'
+                font_name: 'simkai.ttf'
+
+            BoxLayout:
+                orientation: 'horizontal'
+                spacing: 5
+
+                TextInput:
+                    id: hour_input
+                    hint_text: '时'
+                    multiline: False
+                    font_size: '16sp'
+                    input_filter: 'int'
+                    size_hint_x: 0.3
+
+                Label:
+                    text: ':'
+                    size_hint_x: None
+                    width: 20
+                    font_size: '20sp'
+                    halign: 'center'
+                    valign: 'middle'
+
+                TextInput:
+                    id: minute_input
+                    hint_text: '分'
+                    multiline: False
+                    font_size: '16sp'
+                    font_name: 'simkai.ttf'
+                    input_filter: 'int'
+                    size_hint_x: 0.3
+
+        Label:
+            text: '事件:'
+            size_hint_y: None
+            height: 30
+            font_size: '16sp'
+            font_name: 'simkai.ttf'
+
+        TextInput:
+            id: event_input
+            hint_text: '输入事件内容'
+            font_name: 'simkai.ttf'
+            size_hint_y: None
+            height: 100
+            font_size: '16sp'
+            multiline: True
+
+        Label:
+            text: '描述 (可选):'
+            size_hint_y: None
+            height: 30
+            font_size: '16sp'
+            font_name: 'simkai.ttf'
+
+        TextInput:
+            id: description_input
+            hint_text: '输入详细描述'
+            font_name: 'simkai.ttf'
+            size_hint_y: None
+            height: 80
+            font_size: '14sp'
+            multiline: True
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: 10
+            size_hint_y: None
+            height: 50
+
+            Button:
+                text: '取消'
+                font_size: '14sp'
+                font_name: 'simkai.ttf'
+                background_color: get_color_from_hex('#cccccc')
+                background_normal: ''
+                color: get_color_from_hex('#333333')
+                on_press: root.dismiss()
+
+            Button:
+                text: '保存'
+                font_size: '14sp'
+                font_name: 'simkai.ttf'
+                background_color: get_color_from_hex('#4a9eff')
+                background_normal: ''
+                color: (1, 1, 1, 1)
+                on_press: root.save_changes()
+
+<DeleteConfirmPopup>:
+    title: '删除确认'
+    title_font: 'simkai.ttf'
+    size_hint: (0.7, 0.3)
+
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: 10
+        padding: 20
+
+        Label:
+            text: '确定要删除这个事件吗？\n（提醒也会被取消）'
+            font_size: '16sp'
+            font_name: 'simkai.ttf'
+            halign: 'center'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: 10
+            size_hint_y: None
+            height: 50
+
+            Button:
+                text: '取消'
+                font_size: '14sp'
+                font_name: 'simkai.ttf'
+                background_color: get_color_from_hex('#cccccc')
+                background_normal: ''
+                color: get_color_from_hex('#333333')
+                on_press: root.dismiss()
+
+            Button:
+                text: '确定删除'
+                font_size: '14sp'
+                font_name: 'simkai.ttf'
+                background_color: get_color_from_hex('#e2695d')
+                background_normal: ''
+                color: (1, 1, 1, 1)
+                on_press: root.confirm_delete()
+#轨迹
+<ImageButton@ButtonBehavior+Image>:
+
+<TrackingTab>:
+    orientation: 'vertical'
+    padding: 12
+    spacing: 10
+
+    canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: 'assets/images/img.png'
+            tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
+        Color:
+            rgba: 1, 1, 1, 0.32
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    RelativeLayout:
+        size_hint_y: None
+        height: 220
+
+        ImageButton:
+            id: top_image
+            source: 'assets/images/top_placeholder.jpg'
+            allow_stretch: True
+            keep_ratio: False
+            size_hint: 1, 1
+            on_release: root.open_top_image()
+
+        BoxLayout:
+            size_hint: 1, None
+            height: 56
+            pos_hint: {'x':0, 'y':0}
+            padding: 10
+            canvas.before:
+                Color:
+                    rgba: 0,0,0,0.30
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                text: '今日要闻'
+                font_name: 'simsun.ttc'
+                color: 1,1,1,1
+                bold: True
+                font_size: '18sp'
+                size_hint_x: None
+                width: 160
+            Label:
+                id: top_image_label
+                text: ''
+                font_name: 'simsun.ttc'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 48
+        spacing: 8
+
+        Button:
+            text: '定位 轨迹 与天气'
+            font_name: 'simsun.ttc'
+            background_normal: ''
+            background_color: 0.12,0.56,0.92,0.6
+            color: 1,1,1,1
+            size_hint_x: 0.6  # 占60%宽度
+            on_release: root.open_local_html(self)
+
+        Button:
+            text: '手动刷新'
+            font_name: 'simsun.ttc'
+            background_normal: ''
+            background_color: 0.9,0.5,0.12,0.6
+            color: 1,1,1,1
+            size_hint_x: 0.4  # 占60%宽度
+            on_release: root.on_manual_refresh(self)
+
+
+
+
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint_y: None
+        height: self.minimum_height
+        spacing: 6
+
+        Label:
+            id: news_status_label
+            text: root.news_status
+            font_name: 'simsun.ttc'
+            font_size: '15sp'
+            size_hint_y: None
+            height: 28
+            color: 0.06,0.06,0.26,1
+            bold: True
+
+        ScrollView:
+            size_hint_y: None
+            height: 260
+            do_scroll_x: False
+
+            GridLayout:
+                id: news_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                row_default_height: 80
+                spacing: 8
+                padding: 4
+
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint_y: 1
+        spacing: 6
+
+        Label:
+            id: hot_status_label
+            text: root.hot_status
+            font_name: 'simsun.ttc'
+            font_size: '15sp'
+            size_hint_y: None
+            height: 28
+            color: 0.45,0.07,0.12,1
+            bold: True
+
+        ScrollView:
+            do_scroll_x: False
+
+            GridLayout:
+                id: hot_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                row_default_height: 70
+                spacing: 6
+                padding: 4
+
+<Button@Button>:
+    text_size: (self.width-20, None)
+    halign: 'left'
+    valign: 'middle'
+    markup: True
 <PersonalizationTab>:
     canvas.before:
         Rectangle:
-            pos:self.pos
+            pos: self.pos
             size: self.size
-            source: 'assets/images/img.png'#scheduletabe的背景图
+            source: 'assets/images/img.png'
             tex_coords: (0, 1, 1, 1, 1, 0, 0, 0)
-        Color:#调整后续的元素的颜色，透明度等
-            rgba: 1, 1, 1, 0.5  # 白色 + 50%透明度
+        Color:
+            rgba: 1, 1, 1, 0.32
         Rectangle:
             pos: self.pos
             size: self.size
+# ========== 确保编辑/删除弹窗样式完整 ==========
+<EditActivityPopup>:
+    title: '编辑事件'
+    title_font: 'simkai.ttf'
+    size_hint: (0.8, 0.6)
+    separator_height: 2
+    separator_color: get_color_from_hex('#4a9eff')
+    background_color: get_color_from_hex('#f5f7fa')
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]
 
-    orientation: 'vertical'
-    padding: 20
-    spacing: 15
-    Button:
-        id: game_button
-        text: "▶ 开始乒乓球游戏"
-        font_name: 'simsun.ttc'
-        size_hint: (1, 0.12)
-        font_size: '20sp'
-        bold: True
-        background_color: (0, 0, 0, 0)  # 透明背景
-        background_normal: ''
-        color: (1, 1, 1, 1)
-        on_press: root.run_pingpong_game()
+<DeleteConfirmPopup>:
+    title: '删除确认'
+    title_font: 'simkai.ttf'
+    size_hint: (0.7, 0.3)
+    separator_height: 2
+    separator_color: get_color_from_hex('#e2695d')
+    background_color: get_color_from_hex('#f5f7fa')
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]
 
-        canvas.before:
-            # 渐变背景
-            Color:
-                rgba: (0.2, 0.5, 0.9, 1)
-            RoundedRectangle:
-                pos: self.pos
-                size: self.size
-                radius: [15,]
-
-        # 按钮发光效果
-            Color:
-                rgba: (0.4, 0.7, 1, 0.3)
-            Line:
-                rounded_rectangle: [self.x, self.y, self.width, self.height, 15]
-                width: 1.5
-
-        canvas.after:
-        # 按钮按下效果
-            Color:
-                rgba: (1, 1, 1, 0.1) if self.state == 'normal' else (1, 1, 1, 0.3)
-            RoundedRectangle:
-                pos: self.pos
-                size: self.size
-                radius: [15,]
-    Button:
-        id: game_button
-        text: "▶ 开始2048游戏"
-        font_name: 'simsun.ttc'
-        size_hint: (1, 0.12)
-        font_size: '20sp'
-        bold: True
-        background_color: (0, 0, 0, 0)  # 透明背景
-        background_normal: ''
-        color: (1, 1, 1, 1)
-        on_press: root.run_twenty48_game()
-
-        canvas.before:
-            # 渐变背景
-            Color:
-                rgba: (0.2, 0.5, 0.9, 1)
-            RoundedRectangle:
-                pos: self.pos
-                size: self.size
-                radius: [15,]
-
-        # 按钮发光效果
-            Color:
-                rgba: (0.4, 0.7, 1, 0.3)
-            Line:
-                rounded_rectangle: [self.x, self.y, self.width, self.height, 15]
-                width: 1.5
-
-        canvas.after:
-        # 按钮按下效果
-            Color:
-                rgba: (1, 1, 1, 0.1) if self.state == 'normal' else (1, 1, 1, 0.3)
-            RoundedRectangle:
-                pos: self.pos
-                size: self.size
-                radius: [15,]
+<AddActivityPopup>:
+    title: '添加新事项'
+    title_font: 'simsun.ttc'
+    size_hint: (0.8, 0.6)
+    auto_dismiss: False
+    separator_height: 2
+    separator_color: get_color_from_hex('#6699FF')
+    background_color: get_color_from_hex('#f5f7fa')
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8,]

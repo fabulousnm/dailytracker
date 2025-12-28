@@ -1,10 +1,13 @@
+# personalization_tab.py 修改后的版本
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.widget import Widget
-from kivy.graphics import Rectangle, Color, Line
+from kivy.graphics import Rectangle, Color, Line, RoundedRectangle
 from kivy.core.image import Image as CoreImage
 from kivy.graphics.texture import Texture
 import shutil
@@ -13,9 +16,8 @@ from PIL import Image as PILImage
 import io
 import subprocess
 import sys
-import os
-from kivy.uix.popup import Popup
-from kivy.uix.label import Label
+import webbrowser
+
 
 class ImageCropWidget(Widget):
     def __init__(self, source, crop_ratio=(3, 4), **kwargs):
@@ -88,6 +90,7 @@ class ImageCropWidget(Widget):
             self.crop_size = (300, 400)
             # 确保默认值也居中
             self.crop_pos = (250, 100)  # (800-300)/2=250, (600-400)/2=100
+
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
             self.dragging = True
@@ -132,8 +135,8 @@ class ImageCropWidget(Widget):
             # 图片较宽，以宽度为基准
             self.display_width = self.width
             self.display_height = self.width / img_ratio
-            self.display_x = 50 #图片的出现位置
-            self.display_y = (self.height - self.display_height) #图片的出现位置
+            self.display_x = 50  # 图片的出现位置
+            self.display_y = (self.height - self.display_height)  # 图片的出现位置
         else:
             # 图片较高，以高度为基准
             self.display_height = self.height
@@ -147,8 +150,8 @@ class ImageCropWidget(Widget):
 
         with self.canvas:
             # 绘制背景
-           # Color(1, 1, 1, 1)
-            #Rectangle(pos=(50, 150), size=(self.width, self.height))#灰色背景位置
+            # Color(1, 1, 1, 1)
+            # Rectangle(pos=(50, 150), size=(self.width, self.height))#灰色背景位置
 
             # 绘制完整的图片
             if self.texture:
@@ -294,32 +297,320 @@ class PersonalizationTab(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
-        self.padding = 20
-        self.spacing = 15
+        self.padding = [10, 5]
+        self.spacing = 10
         self.selected_file_path = None
 
-        # 添加标题
-        title_label = Label(
-            text="个性化设置",
-            font_size=24,
-            size_hint_y=None,
-            height=50,
-            font_name='simsun.ttc',
-            bold=True
-        )
-        self.add_widget(title_label)
 
-        # 添加上传按钮
-        upload_btn = Button(
-            text="上传图片",
+
+        # 创建三部分界面
+        self.create_interface()
+
+    def update_bg(self, *args):
+        self.canvas.before.clear()
+        with self.canvas.before:
+            Color(0.95, 0.95, 0.98, 1)
+            Rectangle(pos=self.pos, size=self.size)
+
+    def create_interface(self):
+        """创建三部分界面"""
+
+        # ===== 第一部分：顶部个性化图片按钮 =====
+        top_section = BoxLayout(
+            orientation='vertical',
+            size_hint=(1, 0.15),
+            padding=[20, 10],
+            spacing=10
+        )
+
+        top_title = Label(
+            text="个性化设置",
+            font_size=28,
             size_hint_y=None,
-            height=50,
+            height=40,
             font_name='simsun.ttc',
             bold=True,
-            background_color=(0.2, 0.6, 0.8, 1)
+            color=(0.1, 0.1, 0.3, 1)
         )
-        upload_btn.bind(on_press=self.show_file_chooser)
-        self.add_widget(upload_btn)
+
+        top_button = Button(
+            text="                 上传个性化图片",
+            size_hint_y=None,
+            height=60,
+            font_name='simsun.ttc',
+            font_size=18,
+            bold=True,
+            background_color=(1.0, 0.8, 0.8, 0.8),
+            color=(1, 1, 1, 1)
+        )
+        top_button.bind(on_press=self.show_file_chooser)
+
+        top_section.add_widget(top_title)
+        top_section.add_widget(top_button)
+        self.add_widget(top_section)
+
+        # 添加分隔线
+
+
+        # ===== 第二部分：大学生帮助按钮 =====
+        middle_section = BoxLayout(
+            orientation='vertical',
+            size_hint=(1, 0.12),
+            padding=[20, 10],
+            spacing=10
+        )
+
+        middle_title = Label(
+            text="学习帮助",
+            font_size=24,
+            size_hint_y=None,
+            height=30,
+            font_name='simsun.ttc',
+            bold=True,
+            color=(0.1, 0.1, 0.3, 1)
+        )
+
+        help_button = Button(
+            text="                 大学生帮助文档",
+            size_hint_y=None,
+            height=70,
+            font_name='simsun.ttc',
+            font_size=18,
+            bold=True,
+            background_color=(0.85, 0.95, 0.85, 0.7),
+            color=(1, 1, 1, 1)
+        )
+        help_button.bind(on_press=self.open_student_help)
+
+        middle_section.add_widget(middle_title)
+        middle_section.add_widget(help_button)
+        self.add_widget(middle_section)
+
+        # ===== 第三部分：游戏专区 =====
+        game_section = BoxLayout(
+            orientation='vertical',
+            size_hint=(1, 0.7),
+            padding=[10, 5],
+            spacing=15
+        )
+
+        # 游戏专区标题
+        game_title = Label(
+            text="🎮 游戏专区",
+            font_size=26,
+            size_hint_y=None,
+            height=40,
+            font_name='simsun.ttc',
+            bold=True,
+            color=(0.1, 0.1, 0.3, 1)
+        )
+        game_section.add_widget(game_title)
+
+        # 创建可滚动的游戏区域
+        scroll_view = ScrollView(size_hint=(1, 1))
+        game_container = GridLayout(
+            cols=1,
+            spacing=15,
+            size_hint_y=None,
+            padding=[10, 10, 10, 20]
+        )
+        game_container.bind(minimum_height=game_container.setter('height'))
+
+        # 单人游戏区域
+        # 单人游戏区域
+        single_player_section = self.create_game_section("单人游戏", [
+            ("▶ 俄罗斯方块", "tetris.py", (0.2, 0.6, 0.9, 1)),  # 蓝色
+            ("▶ 2048游戏", "twenty48.py", (0.3, 0.7, 0.5, 1)),  # 绿色
+            ("📖 数独游戏", "数独.html", (0.9, 0.7, 0.3, 1)),  # 橙色
+            ("📖 华容道", "华容道.html", (0.6, 0.8, 0.4, 1)),  # 浅绿色
+            ("📖 打砖块", "打砖块.html", (0.9, 0.5, 0.3, 1)),  # 橙红色
+            ("📖 扫雷", "扫雷.html", (0.7, 0.5, 0.8, 1)),  # 紫色
+            ("📖 推箱子", "推箱子.html", (0.5, 0.7, 0.9, 1)),  # 浅蓝色
+            ("📖 贪吃蛇", "贪吃蛇游戏11.html", (0.4, 0.8, 0.6, 1))  # 青色
+        ])
+
+
+        game_container.add_widget(single_player_section)
+
+        # 双人游戏区域
+        double_player_section = self.create_game_section("双人游戏", [
+            ("▶ 乒乓球", "pingpong.py", (0.9, 0.3, 0.3, 1)),  # 红色
+            ("📖 中国象棋", "中国象棋.html", (0.8, 0.5, 0.2, 1)),  # 橙色
+            ("📖 五子棋", "五子棋.html", (0.3, 0.3, 0.8, 1))  # 蓝色
+        ])
+        game_container.add_widget(double_player_section)
+
+        scroll_view.add_widget(game_container)
+        game_section.add_widget(scroll_view)
+        self.add_widget(game_section)
+
+    def create_game_section(self, title, games):
+        """创建游戏区域"""
+        section = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            height=len(games) * 80 + 50,  # 根据游戏数量调整高度
+            spacing=10
+        )
+
+        # 区域标题
+        title_label = Label(
+            text=title,
+            font_size=22,
+            size_hint_y=None,
+            height=40,
+            font_name='simsun.ttc',
+            bold=True,
+            color=(0.1, 0.1, 0.3, 1)
+        )
+        section.add_widget(title_label)
+
+        # 游戏按钮
+        for game_name, game_file, color in games:
+            btn = Button(
+                text=game_name,
+                size_hint_y=None,
+                height=70,
+                font_name='simsun.ttc',
+                font_size=18,
+                bold=True,
+                color=(1, 1, 1, 1),
+                background_color=color,  # 直接使用你定义的颜色
+                background_normal=''  # 关键：移除默认灰色背景
+            )
+
+
+
+            # 绑定不同的事件处理函数
+            if game_file.endswith('.py'):
+                if game_file == 'pingpong.py':
+                    btn.bind(on_press=lambda x, f=game_file: self.run_pingpong_game())
+                elif game_file == 'tetris.py':
+                    btn.bind(on_press=lambda x, f=game_file: self.run_tetris_game())
+                elif game_file == 'twenty48.py':
+                    btn.bind(on_press=lambda x, f=game_file: self.run_twenty48_game())
+            else:
+                btn.bind(on_press=lambda x, f=game_file: self.open_html_game(f))
+
+            section.add_widget(btn)
+
+        return section
+
+    def open_student_help(self, instance):
+        """打开大学生帮助文档"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            game_dir = os.path.join(parent_dir, 'game')
+            help_path = os.path.join(game_dir, '大学生帮助.html')
+
+            if os.path.exists(help_path):
+                webbrowser.open(f'file://{os.path.abspath(help_path)}')
+                self.show_message("提示", "正在打开大学生帮助文档...")
+            else:
+                self.show_message("错误", f"找不到帮助文件:\n{help_path}")
+        except Exception as e:
+            self.show_message("错误", f"打开文档失败:\n{str(e)}")
+
+    def open_html_game(self, game_file):
+        """打开HTML游戏"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            game_dir = os.path.join(parent_dir, 'game')
+            game_path = os.path.join(game_dir, game_file)
+
+            if os.path.exists(game_path):
+                webbrowser.open(f'file://{os.path.abspath(game_path)}')
+
+            else:
+                self.show_message("错误", f"找不到游戏文件:\n{game_file}")
+        except Exception as e:
+            self.show_message("错误", f"打开游戏失败:\n{str(e)}")
+
+    def run_pingpong_game(self):
+        """运行乒乓球游戏"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            game_dir = os.path.join(parent_dir, 'game')
+            game_path = os.path.join(game_dir, 'pingpong.py')
+
+            if not os.path.exists(game_path):
+                self.show_message("错误", f"找不到游戏文件:\n{game_path}")
+                return
+
+            # 运行游戏
+            if sys.platform == 'win32':
+                subprocess.Popen(['python', 'pingpong.py'], cwd=game_dir, shell=True)
+            elif sys.platform == 'darwin':
+                subprocess.Popen(['python3', 'pingpong.py'], cwd=game_dir)
+            else:
+                subprocess.Popen(['python3', 'pingpong.py'], cwd=game_dir)
+
+
+
+        except Exception as e:
+            self.show_message("错误", f"启动游戏失败:\n{str(e)}")
+
+    def run_tetris_game(self):
+        """运行俄罗斯方块游戏"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            game_dir = os.path.join(parent_dir, 'game')
+            game_path = os.path.join(game_dir, 'tetris.py')
+
+            if not os.path.exists(game_path):
+                self.show_message("错误", f"找不到游戏文件:\n{game_path}")
+                return
+
+            # 运行游戏
+            if sys.platform == 'win32':
+                subprocess.Popen(['python', 'tetris.py'], cwd=game_dir, shell=True)
+            elif sys.platform == 'darwin':
+                subprocess.Popen(['python3', 'tetris.py'], cwd=game_dir)
+            else:
+                subprocess.Popen(['python3', 'tetris.py'], cwd=game_dir)
+
+
+
+        except Exception as e:
+            self.show_message("错误", f"启动游戏失败:\n{str(e)}")
+
+    def run_twenty48_game(self):
+        """运行2048游戏"""
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            game_dir = os.path.join(parent_dir, 'game')
+            game_path = os.path.join(game_dir, 'twenty48.py')
+
+            if not os.path.exists(game_path):
+                self.show_message("错误", f"找不到游戏文件:\n{game_path}")
+                return
+
+            # 运行游戏
+            if sys.platform == 'win32':
+                subprocess.Popen(['python', 'twenty48.py'], cwd=game_dir, shell=True)
+            elif sys.platform == 'darwin':
+                subprocess.Popen(['python3', 'twenty48.py'], cwd=game_dir)
+            else:
+                subprocess.Popen(['python3', 'twenty48.py'], cwd=game_dir)
+
+
+
+        except Exception as e:
+            self.show_message("错误", f"启动游戏失败:\n{str(e)}")
+
+    def show_file_chooser(self, instance):
+        """显示文件选择器"""
+        try:
+            popup = self.create_file_chooser_popup()
+            popup.open()
+        except Exception as e:
+            print(f"打开文件选择器失败: {e}")
+            self.show_message("错误", "打开文件选择器失败")
 
     def create_file_chooser_popup(self):
         """创建文件选择器弹窗"""
@@ -333,44 +624,6 @@ class PersonalizationTab(BoxLayout):
             size_hint=(1, 0.8)
         )
 
-        # 先定义更新函数
-        def update_filechooser_bg(instance, value):
-            if hasattr(instance, 'background_rect'):  # 添加属性检查
-                instance.background_rect.pos = (50,50)
-                instance.background_rect.size = instance.size
-        with file_chooser.canvas.before:
-            from kivy.core.image import Image as CoreImage
-            texture = CoreImage('assets/images/back.jpg').texture
-            original_width = CoreImage('assets/images/back.jpg').width
-            original_height = CoreImage('assets/images/back.jpg').height
-            image_ratio = original_width / original_height
-
-            # 计算保持比例的尺寸
-            widget_width = file_chooser.width
-            widget_height = file_chooser.height
-            widget_ratio = widget_width / widget_height
-
-            if image_ratio > widget_ratio:
-                # 图片较宽，以宽度为基准
-                display_width = widget_width
-                display_height = widget_width / image_ratio
-                display_x = 0
-                display_y = (widget_height - display_height) / 2
-            else:
-                # 图片较高，以高度为基准
-                display_height = widget_height
-                display_width = widget_height * image_ratio
-                display_x = (widget_width - display_width) / 2
-                display_y = 0
-
-            Rectangle(
-                texture=texture,
-                pos=(display_x, display_y),
-                size=(display_width*5.2, display_height*5.7)
-            )
-
-        # 同样需要绑定更新函数
-        file_chooser.bind(pos=update_filechooser_bg, size=update_filechooser_bg)
         # 创建按钮布局
         button_layout = BoxLayout(
             orientation='horizontal',
@@ -420,7 +673,7 @@ class PersonalizationTab(BoxLayout):
                 popup.dismiss()
                 self.show_crop_interface()
             else:
-                self.show_message("请先选择一张图片")
+                self.show_message("提示", "请先选择一张图片")
 
         def on_cancel(instance):
             popup.dismiss()
@@ -430,19 +683,10 @@ class PersonalizationTab(BoxLayout):
 
         return popup
 
-    def show_file_chooser(self, instance):
-        """显示文件选择器"""
-        try:
-            popup = self.create_file_chooser_popup()
-            popup.open()
-        except Exception as e:
-            print(f"打开文件选择器失败: {e}")
-            self.show_message("打开文件选择器失败")
-
     def create_crop_popup(self):
         """创建图片裁剪弹窗"""
         if not self.selected_file_path or not os.path.exists(self.selected_file_path):
-            self.show_message("图片文件不存在")
+            self.show_message("错误", "图片文件不存在")
             return None
 
         # 创建主布局
@@ -465,7 +709,7 @@ class PersonalizationTab(BoxLayout):
         # 添加裁剪组件
         crop_widget = ImageCropWidget(
             source=self.selected_file_path,
-            crop_ratio=(3, 4),#图片比例
+            crop_ratio=(3, 4),  # 图片比例
             size_hint=(1, 0.7),
             pos_hint={'center_x': 0.5, 'center_y': 0.5}
         )
@@ -511,11 +755,7 @@ class PersonalizationTab(BoxLayout):
             size_hint=(0.9, 0.9),
             auto_dismiss=False,
             pos_hint={'center_x': 0.5, 'center_y': 0.5}
-            ,background='assets/images/image.jpg'  # 使用图片作为背景
-
         )
-
-
 
         # 绑定按钮事件
         def on_crop(instance):
@@ -523,9 +763,9 @@ class PersonalizationTab(BoxLayout):
             if cropped_image:
                 self.save_cropped_image(cropped_image)
                 popup.dismiss()
-                self.show_message("图片裁剪并保存成功！")
+                self.show_message("提示", "图片裁剪并保存成功！")
             else:
-                self.show_message("裁剪失败，请重试")
+                self.show_message("错误", "裁剪失败，请重试")
 
         def on_retry(instance):
             popup.dismiss()
@@ -548,7 +788,7 @@ class PersonalizationTab(BoxLayout):
                 popup.open()
         except Exception as e:
             print(f"显示裁剪界面失败: {e}")
-            self.show_message("裁剪界面加载失败")
+            self.show_message("错误", "裁剪界面加载失败")
 
     def save_cropped_image(self, cropped_image):
         """保存裁剪后的图片"""
@@ -557,7 +797,7 @@ class PersonalizationTab(BoxLayout):
             target_dir = os.path.join('assets', 'images')
             os.makedirs(target_dir, exist_ok=True)
 
-            target_path = os.path.join(target_dir, 'img.png')
+            target_path = os.path.join(target_dir, 'xingye.png')
 
             # 保存图片
             cropped_image.save(target_path, 'PNG')
@@ -567,9 +807,9 @@ class PersonalizationTab(BoxLayout):
 
         except Exception as e:
             print(f"保存图片失败: {e}")
-            self.show_message("保存图片失败")
+            self.show_message("错误", "保存图片失败")
 
-    def show_message(self, message):
+    def show_message(self, title, message):
         """显示消息弹窗"""
         content = BoxLayout(orientation='vertical', spacing=10, padding=20)
         content.add_widget(Label(
@@ -587,7 +827,7 @@ class PersonalizationTab(BoxLayout):
         content.add_widget(ok_btn)
 
         popup = Popup(
-            title='提示',
+            title=title,
             content=content,
             size_hint=(None, None),
             size=(320, 200),
@@ -595,91 +835,4 @@ class PersonalizationTab(BoxLayout):
         )
 
         ok_btn.bind(on_press=popup.dismiss)
-        popup.open()
-
-    def run_pingpong_game(self):
-        """运行乒乓球游戏"""
-        try:
-            # 获取上一级目录的game文件夹路径
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            parent_dir = os.path.dirname(current_dir)
-            game_dir = os.path.join(parent_dir, 'game')
-            pingpong_path = os.path.join(game_dir, 'pingpong.py')
-
-            # 检查文件是否存在
-            if not os.path.exists(pingpong_path):
-                self.show_popup("错误", f"找不到游戏文件:\n{pingpong_path}")
-                return
-
-            print(f"尝试运行游戏: {pingpong_path}")
-            print(f"游戏目录: {game_dir}")
-
-            # 运行游戏
-            if sys.platform == 'win32':
-                # Windows系统
-                subprocess.Popen(['python', 'pingpong.py'], cwd=game_dir, shell=True)
-            elif sys.platform == 'darwin':
-                # macOS系统
-                subprocess.Popen(['python3', 'pingpong.py'], cwd=game_dir)
-            else:
-                # Linux等其他系统
-                subprocess.Popen(['python3', 'pingpong.py'], cwd=game_dir)
-
-            self.show_popup("提示", "正在启动乒乓球游戏...")
-
-        except Exception as e:
-            error_msg = f"启动游戏失败:\n{str(e)}"
-            print(error_msg)
-            self.show_popup("错误", error_msg)
-
-    def show_popup(self, title, message):
-        """显示提示弹窗"""
-        popup = Popup(
-            title=title,
-            content=Label(text=message, font_size='16sp',font_name='simsun.ttc'),
-            size_hint=(0.7, 0.4)
-        )
-        popup.open()
-    def run_twenty48_game(self):
-        """运行乒乓球游戏"""
-        try:
-            # 获取上一级目录的game文件夹路径
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            parent_dir = os.path.dirname(current_dir)
-            game_dir = os.path.join(parent_dir, 'game')
-            twenty48_path = os.path.join(game_dir, 'twenty48.py')
-
-            # 检查文件是否存在
-            if not os.path.exists(twenty48_path):
-                self.show_popup("错误", f"找不到游戏文件:\n{twenty48_path}")
-                return
-
-            print(f"尝试运行游戏: {twenty48_path}")
-            print(f"游戏目录: {game_dir}")
-
-            # 运行游戏
-            if sys.platform == 'win32':
-                # Windows系统
-                subprocess.Popen(['python', 'twenty48.py'], cwd=game_dir, shell=True)
-            elif sys.platform == 'darwin':
-                # macOS系统
-                subprocess.Popen(['python3', 'twenty48.py'], cwd=game_dir)
-            else:
-                # Linux等其他系统
-                subprocess.Popen(['python3', 'twenty48.py'], cwd=game_dir)
-
-            self.show_popup("loading....", "正在启动2048游戏...")
-
-        except Exception as e:
-            error_msg = f"启动游戏失败:\n{str(e)}"
-            print(error_msg)
-            self.show_popup("错误", error_msg)
-
-    def show_popup(self, title, message):
-        """显示提示弹窗"""
-        popup = Popup(
-            title=title,
-            content=Label(text=message, font_size='16sp',font_name='simsun.ttc'),
-            size_hint=(0.7, 0.4)
-        )
         popup.open()

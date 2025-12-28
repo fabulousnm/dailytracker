@@ -514,7 +514,7 @@ class GameGrid(BoxLayout):
 
         # 滚动区域
         scroll = ScrollView()
-        instructions_text = """  游戏目标：
+        instructions_text = """       游戏目标：
  通过移动格子，合并相同的数字，最终创造出
  2048这个数字。
 

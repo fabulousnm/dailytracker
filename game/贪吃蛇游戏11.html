@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇大作战 - 稳定版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+        }
+        
+        .score {
+            text-align: center;
+            min-width: 100px;
+        }
+        
+        .score-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .score-value {
+            font-size: 20px;
+            color: #4cc9f0;
+            font-weight: bold;
+        }
+        
+        #gameCanvas {
+            flex: 1;
+            background: #0f3460;
+            display: block;
+            cursor: none;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(16, 23, 42, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #4cc9f0;
+            text-align: center;
+            z-index: 100;
+            min-width: 300px;
+        }
+        
+        .modal-title {
+            font-size: 28px;
+            color: #4cc9f0;
+            margin-bottom: 20px;
+        }
+        
+        .modal-content {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            background: #4361ee;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background: #3a0ca3;
+        }
+        
+        .hint {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #4cc9f0;
+            z-index: 10;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="score">
+            <div class="score-label">我的长度</div>
+            <div class="score-value" id="snakeLength">10</div>
+        </div>
+        <div class="score">
+            <div class="score-label">能量球</div>
+            <div class="score-value" id="energyCount">800</div>
+        </div>
+    </div>
+    
+    <div class="hint">WASD/方向键控制 | 800能量球满屏 | 收集能量球变长</div>
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- 开始弹窗 -->
+    <div class="modal" id="startModal">
+        <div class="modal-title">贪吃蛇大作战</div>
+        <div class="modal-content">800能量球 + 丝滑控制</div>
+        <button class="btn" id="startBtn">开始游戏</button>
+    </div>
+    
+    <!-- 结束弹窗 -->
+    <div class="modal hidden" id="gameOverModal">
+        <div class="modal-title">游戏结束</div>
+        <div class="modal-content">最终长度: <span id="finalLength">10</span></div>
+        <button class="btn" id="restartBtn">再来一局</button>
+    </div>
+
+    <script>
+        // ========== 基础配置 ==========
+        const MAP_SIZE = 5000;
+        const CONFIG = {
+            snakeSpeed: 4,
+            turnSpeed: 0.1,  // 转向灵敏度
+            energyCount: 800,
+            aiCount: 5,      // 减少AI数量，降低难度
+            energyRadius: 3
+        };
+
+        // ========== 全局变量 ==========
+        let canvas, ctx;
+        let width, height;
+        let gameRunning = false;
+        let gameLoopId = null;
+        
+        // 玩家蛇
+        const player = {
+            x: MAP_SIZE/2,
+            y: MAP_SIZE/2,
+            angle: 0,
+            segments: [],
+            length: 10,
+            color: '#4cc9f0',
+            headColor: '#f72585'
+        };
+        
+        // 相机
+        const camera = {
+            x: MAP_SIZE/2,
+            y: MAP_SIZE/2,
+            speed: 0.05
+        };
+        
+        // 游戏对象
+        let energyBalls = [];
+        let aiSnakes = [];
+        
+        // 键盘状态
+        const keys = {
+            a: false, d: false, w: false, s: false,
+            ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false
+        };
+
+        // ========== 初始化 ==========
+        window.onload = function() {
+            // 获取DOM元素
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // 设置画布大小
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 初始化界面
+            drawEmptyScreen();
+            
+            // 预生成能量球（显示在开始界面上）
+            createEnergyBalls();
+        };
+
+        // 调整画布大小
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight - document.querySelector('.header').offsetHeight;
+            
+            canvas.width = width * window.devicePixelRatio;
+            canvas.height = height * window.devicePixelRatio;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+
+        // 绑定所有事件
+        function bindEvents() {
+            // 开始/重启按钮
+            document.getElementById('startBtn').onclick = startGame;
+            document.getElementById('restartBtn').onclick = restartGame;
+            
+            // 键盘事件
+            document.addEventListener('keydown', (e) => {
+                if (e.key in keys) {
+                    keys[e.key] = true;
+                    e.preventDefault();
+                }
+                
+                // 空格键暂停/继续
+                if (e.code === 'Space' && gameRunning) {
+                    togglePause();
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.key in keys) {
+                    keys[e.key] = false;
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // ========== 游戏核心逻辑 ==========
+        function startGame() {
+            // 隐藏开始弹窗
+            document.getElementById('startModal').classList.add('hidden');
+            
+            // 重置游戏状态
+            resetGame();
+            
+            // 生成AI蛇
+            createAISnakes();
+            
+            // 开始游戏循环
+            gameRunning = true;
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+            }
+            gameLoop();
+        }
+
+        function restartGame() {
+            document.getElementById('gameOverModal').classList.add('hidden');
+            startGame();
+        }
+
+        function togglePause() {
+            if (!gameRunning) return;
+            
+            gameRunning = !gameRunning;
+            if (gameRunning) {
+                gameLoop();
+            } else {
+                // 显示暂停提示
+                ctx.save();
+                ctx.translate(width/2 - camera.x, height/2 - camera.y);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(camera.x - 100, camera.y - 30, 200, 60);
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('游戏暂停', camera.x, camera.y);
+                ctx.restore();
+            }
+        }
+
+        // 重置游戏状态
+        function resetGame() {
+            // 重置玩家
+            player.x = MAP_SIZE/2;
+            player.y = MAP_SIZE/2;
+            player.angle = 0;
+            player.length = 10;
+            player.segments = [];
+            
+            // 初始化玩家身体 - 保持初始长度10
+            for (let i = 0; i < player.length; i++) {
+                player.segments.push({
+                    x: player.x - i * CONFIG.snakeSpeed,
+                    y: player.y
+                });
+            }
+            
+            // 重置相机
+            camera.x = player.x;
+            camera.y = player.y;
+            
+            // 清空AI蛇
+            aiSnakes = [];
+            
+            // 更新分数显示
+            updateScoreDisplay();
+        }
+
+        // 创建800个能量球
+        function createEnergyBalls() {
+            energyBalls = [];
+            
+            for (let i = 0; i < CONFIG.energyCount; i++) {
+                energyBalls.push({
+                    x: Math.random() * MAP_SIZE,
+                    y: Math.random() * MAP_SIZE,
+                    color: `hsl(${Math.random() * 360}, 95%, 65%)`,
+                    radius: CONFIG.energyRadius
+                });
+            }
+            
+            // 更新计数显示
+            document.getElementById('energyCount').textContent = energyBalls.length;
+        }
+
+        // 创建AI蛇
+        function createAISnakes() {
+            aiSnakes = [];
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+            
+            for (let i = 0; i < CONFIG.aiCount; i++) {
+                // 随机位置（远离玩家）
+                let x, y;
+                do {
+                    x = Math.random() * MAP_SIZE;
+                    y = Math.random() * MAP_SIZE;
+                } while (Math.hypot(x - player.x, y - player.y) < 300);
+                
+                const ai = {
+                    x: x,
+                    y: y,
+                    angle: Math.random() * Math.PI * 2,
+                    segments: [],
+                    length: 8 + Math.floor(Math.random() * 7),  // 8-14长度
+                    color: colors[i % colors.length],
+                    headColor: colors[i % colors.length],
+                    speed: CONFIG.snakeSpeed * (0.8 + Math.random() * 0.3),
+                    target: null,
+                    changeTargetTimer: 0
+                };
+                
+                // 初始化AI身体
+                for (let j = 0; j < ai.length; j++) {
+                    ai.segments.push({
+                        x: ai.x - j * ai.speed * Math.cos(ai.angle),
+                        y: ai.y - j * ai.speed * Math.sin(ai.angle)
+                    });
+                }
+                
+                aiSnakes.push(ai);
+            }
+        }
+
+        // 游戏主循环
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 保存画布状态
+            ctx.save();
+            
+            // 平移到相机位置
+            ctx.translate(width/2 - camera.x, height/2 - camera.y);
+            
+            // 绘制游戏对象
+            drawEnergyBalls();
+            drawAISnakes();
+            drawPlayer();
+            
+            // 恢复画布状态
+            ctx.restore();
+            
+            // 更新游戏状态
+            updateGame();
+            
+            // 继续循环
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        // 更新游戏状态
+        function updateGame() {
+            // 处理键盘控制
+            handleControls();
+            
+            // 更新玩家位置
+            updatePlayer();
+            
+            // 更新AI
+            updateAI();
+            
+            // 检测碰撞
+            checkCollisions();
+            
+            // 更新相机
+            updateCamera();
+        }
+
+        // 处理键盘控制
+        function handleControls() {
+            // 转向控制
+            let turn = 0;
+            if (keys.a || keys.ArrowLeft) turn -= 1;
+            if (keys.d || keys.ArrowRight) turn += 1;
+            
+            // 加速/减速
+            let speed = CONFIG.snakeSpeed;
+            if (keys.w || keys.ArrowUp) speed *= 1.5;
+            if (keys.s || keys.ArrowDown) speed *= 0.7;
+            
+            // 更新角度
+            player.angle += turn * CONFIG.turnSpeed;
+            player.angle = (player.angle + Math.PI * 2) % (Math.PI * 2);
+            
+            // 更新速度
+            CONFIG.currentSpeed = speed;
+        }
+
+        // 更新玩家位置
+        function updatePlayer() {
+            // 计算新位置
+            player.x += Math.cos(player.angle) * (CONFIG.currentSpeed || CONFIG.snakeSpeed);
+            player.y += Math.sin(player.angle) * (CONFIG.currentSpeed || CONFIG.snakeSpeed);
+            
+            // 边界环绕
+            if (player.x < 0) player.x = MAP_SIZE;
+            if (player.x > MAP_SIZE) player.x = 0;
+            if (player.y < 0) player.y = MAP_SIZE;
+            if (player.y > MAP_SIZE) player.y = 0;
+            
+            // 更新身体
+            player.segments.unshift({ x: player.x, y: player.y });
+            if (player.segments.length > player.length) {
+                player.segments.pop();
+            }
+            
+            // 更新分数显示
+            document.getElementById('snakeLength').textContent = player.length;
+        }
+
+        // 更新AI蛇
+        function updateAI() {
+            aiSnakes.forEach(ai => {
+                // 定期改变目标
+                ai.changeTargetTimer--;
+                if (ai.changeTargetTimer <= 0 || !ai.target) {
+                    // 寻找最近的能量球或随机移动
+                    if (Math.random() < 0.7 && energyBalls.length > 0) {
+                        // 寻找能量球
+                        let closestEnergy = null;
+                        let minDist = Infinity;
+                        
+                        // 只检查一部分能量球以提高性能
+                        const checkCount = Math.min(50, energyBalls.length);
+                        for (let i = 0; i < checkCount; i++) {
+                            const energy = energyBalls[Math.floor(Math.random() * energyBalls.length)];
+                            const dist = Math.hypot(ai.x - energy.x, ai.y - energy.y);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                closestEnergy = energy;
+                            }
+                        }
+                        
+                        ai.target = closestEnergy;
+                    } else {
+                        // 随机移动
+                        ai.target = {
+                            x: ai.x + Math.cos(ai.angle) * 500 + (Math.random() - 0.5) * 1000,
+                            y: ai.y + Math.sin(ai.angle) * 500 + (Math.random() - 0.5) * 1000
+                        };
+                    }
+                    ai.changeTargetTimer = 60 + Math.random() * 120;
+                }
+                
+                // 转向目标
+                if (ai.target) {
+                    const targetAngle = Math.atan2(ai.target.y - ai.y, ai.target.x - ai.x);
+                    let diff = targetAngle - ai.angle;
+                    
+                    // 规范化角度差
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    
+                    // 平滑转向
+                    ai.angle += Math.max(-0.05, Math.min(0.05, diff * 0.1));
+                }
+                
+                // 更新AI位置
+                ai.x += Math.cos(ai.angle) * ai.speed;
+                ai.y += Math.sin(ai.angle) * ai.speed;
+                
+                // 边界环绕
+                if (ai.x < 0) ai.x = MAP_SIZE;
+                if (ai.x > MAP_SIZE) ai.x = 0;
+                if (ai.y < 0) ai.y = MAP_SIZE;
+                if (ai.y > MAP_SIZE) ai.y = 0;
+                
+                // 更新AI身体
+                ai.segments.unshift({ x: ai.x, y: ai.y });
+                if (ai.segments.length > ai.length) {
+                    ai.segments.pop();
+                }
+            });
+        }
+
+        // 碰撞检测 - 修复版
+        function checkCollisions() {
+            // 玩家吃能量球
+            for (let i = energyBalls.length - 1; i >= 0; i--) {
+                const energy = energyBalls[i];
+                const dist = Math.hypot(player.x - energy.x, player.y - energy.y);
+                
+                if (dist < 20) {  // 增加碰撞距离
+                    // 吃到能量球
+                    energyBalls.splice(i, 1);
+                    player.length += 1;
+                    
+                    // 补充新的能量球
+                    energyBalls.push({
+                        x: Math.random() * MAP_SIZE,
+                        y: Math.random() * MAP_SIZE,
+                        color: `hsl(${Math.random() * 360}, 95%, 65%)`,
+                        radius: CONFIG.energyRadius
+                    });
+                    
+                    // 更新计数
+                    updateScoreDisplay();
+                }
+            }
+            
+            // AI吃能量球
+            aiSnakes.forEach(ai => {
+                for (let i = energyBalls.length - 1; i >= 0; i--) {
+                    const energy = energyBalls[i];
+                    const dist = Math.hypot(ai.x - energy.x, ai.y - energy.y);
+                    
+                    if (dist < 20) {
+                        energyBalls.splice(i, 1);
+                        ai.length += 1;
+                        
+                        // 补充能量球
+                        energyBalls.push({
+                            x: Math.random() * MAP_SIZE,
+                            y: Math.random() * MAP_SIZE,
+                            color: `hsl(${Math.random() * 360}, 95%, 65%)`,
+                            radius: CONFIG.energyRadius
+                        });
+                        
+                        updateScoreDisplay();
+                    }
+                }
+            });
+            
+            // 玩家撞AI - 修复碰撞检测
+            for (const ai of aiSnakes) {
+                // 撞AI头部（只有玩家比AI长时才安全）
+                const headDist = Math.hypot(player.x - ai.x, player.y - ai.y);
+                if (headDist < 25) {  // 增加碰撞阈值
+                    if (player.length < ai.length) {
+                        gameOver();
+                        return;
+                    }
+                }
+                
+                // 撞AI身体（跳过前几个段避免误判）
+                for (let j = 3; j < ai.segments.length; j++) {
+                    const seg = ai.segments[j];
+                    const dist = Math.hypot(player.x - seg.x, player.y - seg.y);
+                    if (dist < 15) {  // 增加身体碰撞阈值
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+            
+            // 撞自己 - 跳过前几个段（避免撞到刚刚移动的位置）
+            for (let i = 4; i < player.segments.length; i++) {
+                const seg = player.segments[i];
+                const dist = Math.hypot(player.x - seg.x, player.y - seg.y);
+                if (dist < 10) {  // 稍微降低自撞阈值
+                    gameOver();
+                    return;
+                }
+            }
+        }
+
+        // 更新分数显示
+        function updateScoreDisplay() {
+            document.getElementById('snakeLength').textContent = player.length;
+            document.getElementById('energyCount').textContent = energyBalls.length;
+        }
+
+        // 更新相机
+        function updateCamera() {
+            camera.x += (player.x - camera.x) * camera.speed;
+            camera.y += (player.y - camera.y) * camera.speed;
+        }
+
+        // ========== 绘制函数 ==========
+        function drawEmptyScreen() {
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        // 绘制能量球
+        function drawEnergyBalls() {
+            energyBalls.forEach(energy => {
+                ctx.beginPath();
+                ctx.arc(energy.x, energy.y, energy.radius, 0, Math.PI * 2);
+                ctx.fillStyle = energy.color;
+                ctx.fill();
+                
+                // 高光效果
+                ctx.beginPath();
+                ctx.arc(energy.x - energy.radius/3, energy.y - energy.radius/3, energy.radius/3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.fill();
+            });
+        }
+
+        // 绘制AI蛇
+        function drawAISnakes() {
+            aiSnakes.forEach(ai => {
+                // 绘制身体
+                if (ai.segments.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(ai.segments[0].x, ai.segments[0].y);
+                    for (let i = 1; i < ai.segments.length; i++) {
+                        ctx.lineTo(ai.segments[i].x, ai.segments[i].y);
+                    }
+                    ctx.lineWidth = 8;
+                    ctx.strokeStyle = ai.color;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
+                }
+                
+                // 绘制头部
+                ctx.beginPath();
+                ctx.arc(ai.x, ai.y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = ai.headColor;
+                ctx.fill();
+                
+                // 头部轮廓
+                ctx.beginPath();
+                ctx.arc(ai.x, ai.y, 10, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        // 绘制玩家
+        function drawPlayer() {
+            // 绘制身体
+            if (player.segments.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(player.segments[0].x, player.segments[0].y);
+                for (let i = 1; i < player.segments.length; i++) {
+                    ctx.lineTo(player.segments[i].x, player.segments[i].y);
+                }
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = player.color;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            }
+            
+            // 绘制头部
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, 12, 0, Math.PI * 2);
+            ctx.fillStyle = player.headColor;
+            ctx.fill();
+            
+            // 头部轮廓
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, 12, 0, Math.PI * 2);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 眼睛
+            const eyeOffset = 8;
+            const eyeX = player.x + Math.cos(player.angle) * eyeOffset;
+            const eyeY = player.y + Math.sin(player.angle) * eyeOffset;
+            
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY, 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+            
+            // 第二只眼睛（在头部两侧）
+            const eyeOffset2 = 6;
+            const eyeAngle = player.angle + Math.PI/2;
+            const eyeX2 = player.x + Math.cos(eyeAngle) * eyeOffset2;
+            const eyeY2 = player.y + Math.sin(eyeAngle) * eyeOffset2;
+            
+            ctx.beginPath();
+            ctx.arc(eyeX2, eyeY2, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+        }
+
+        // 游戏结束
+        function gameOver() {
+            gameRunning = false;
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+            }
+            
+            // 显示结束界面
+            document.getElementById('finalLength').textContent = player.length;
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

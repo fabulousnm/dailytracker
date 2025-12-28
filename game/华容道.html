@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>现代化华容道闯关</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* 白昼模式变量 */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #2d3436;
+            --text-secondary: #636e72;
+            --accent-primary: #6c5ce7;
+            --accent-secondary: #a29bfe;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #ff7675;
+            --border: #dee2e6;
+            --shadow: rgba(99, 99, 99, 0.1);
+            --shadow-light: rgba(0, 0, 0, 0.05);
+
+            /* 华容道方块颜色 */
+            --block-2: #ffeaa7;
+            --block-4: #fab1a0;
+            --block-8: #74b9ff;
+            --block-16: #55efc4;
+            --block-32: #fd79a8;
+            --block-64: #81ecec;
+            --block-128: #a29bfe;
+            --block-256: #dfe6e9;
+            --block-512: #fdcb6e;
+            --block-1024: #e17055;
+            --block-2048: #6c5ce7;
+            --block-special: #2d3436;
+        }
+
+        .dark-mode {
+            /* 黑夜模式变量 */
+            --bg-primary: #1a1b2e;
+            --bg-secondary: #25273e;
+            --bg-tertiary: #2f3247;
+            --text-primary: #f8f9fa;
+            --text-secondary: #adb5bd;
+            --accent-primary: #8a7df1;
+            --accent-secondary: #6c5ce7;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #ff7675;
+            --border: #404359;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-light: rgba(255, 255, 255, 0.05);
+
+            /* 华容道方块颜色 - 夜间模式更柔和 */
+            --block-2: #fdcb6e;
+            --block-4: #ff9a8b;
+            --block-8: #6ea8ff;
+            --block-16: #00d4aa;
+            --block-32: #ff6b9d;
+            --block-64: #4dd8d8;
+            --block-128: #8a7df1;
+            --block-256: #636e72;
+            --block-512: #ffc049;
+            --block-1024: #ff8a65;
+            --block-2048: #6c5ce7;
+            --block-special: #dfe6e9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .game-container {
+            max-width: 1400px;
+            width: 100%;
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            min-height: 800px;
+        }
+
+        /* 头部区域 */
+        .header {
+            background: var(--bg-tertiary);
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--success), var(--warning));
+        }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-icon {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .game-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .game-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            width: 60px;
+            height: 30px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-primary);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .dark-mode .toggle-slider {
+            transform: translateX(30px);
+            background: var(--warning);
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 600px;
+        }
+
+        /* 游戏区域 */
+        .game-area {
+            flex: 3;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-secondary);
+        }
+
+        /* 华容道棋盘容器 */
+        .board-container {
+            position: relative;
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        #game-board {
+            display: grid;
+            gap: 8px;
+            background: var(--border);
+            padding: 8px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .cell {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.8rem;
+            user-select: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 6px var(--shadow);
+            border: 2px solid transparent;
+        }
+
+        .cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px var(--shadow);
+            border-color: var(--accent-primary);
+        }
+
+        .cell.empty {
+            background: var(--bg-tertiary);
+            box-shadow: none;
+            cursor: default;
+            border-color: transparent;
+        }
+
+        .cell.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cell.special {
+            background: var(--block-special);
+            color: white;
+        }
+
+        /* 方块大小样式 */
+        .cell.size-2 { background: var(--block-2); color: #333; }
+        .cell.size-4 { background: var(--block-4); color: white; }
+        .cell.size-8 { background: var(--block-8); color: white; }
+        .cell.size-16 { background: var(--block-16); color: #333; }
+        .cell.size-32 { background: var(--block-32); color: white; }
+        .cell.size-64 { background: var(--block-64); color: #333; }
+        .cell.size-128 { background: var(--block-128); color: white; }
+        .cell.size-256 { background: var(--block-256); color: #333; }
+        .cell.size-512 { background: var(--block-512); color: #333; }
+        .cell.size-1024 { background: var(--block-1024); color: white; }
+        .cell.size-2048 { background: var(--block-2048); color: white; }
+
+        /* 控制面板 */
+        .control-panel {
+            flex: 1;
+            padding: 30px;
+            background: var(--bg-tertiary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            min-width: 350px;
+        }
+
+        /* 游戏状态 */
+        .game-stats {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--accent-primary);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* 关卡信息 */
+        .level-info {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .level-info h3 {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .level-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .level-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* 关卡选择 */
+        .level-selector {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .level-selector h3 {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .level-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .level-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .level-pagination {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .level-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .level-grid::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .level-grid::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 3px;
+        }
+
+        .level-btn {
+            aspect-ratio: 1;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .level-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .level-btn.current {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        .level-btn.completed {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .level-btn.locked {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .level-btn.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 0.7rem;
+        }
+
+        /* 游戏控制 */
+        .game-controls {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+            border: 2px solid var(--accent-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+            transform: translateY(-3px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: 2px solid var(--success);
+        }
+
+        .btn-success:hover {
+            background: #00a085;
+            border-color: #00a085;
+            transform: translateY(-3px);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #333;
+            border: 2px solid var(--warning);
+        }
+
+        .btn-warning:hover {
+            background: #ffc049;
+            border-color: #ffc049;
+            transform: translateY(-3px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: 2px solid var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #ff5e5e;
+            border-color: #ff5e5e;
+            transform: translateY(-3px);
+        }
+
+        /* 操作提示 */
+        .instructions {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .instruction-icon {
+            color: var(--accent-primary);
+            font-size: 1rem;
+            min-width: 20px;
+        }
+
+        /* 难度说明 */
+        .difficulty-info {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .difficulty-info h3 {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .difficulty-bars {
+            display: flex;
+            gap: 5px;
+            height: 8px;
+            margin-bottom: 15px;
+        }
+
+        .difficulty-bar {
+            flex: 1;
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .difficulty-bar.active {
+            background: var(--accent-primary);
+        }
+
+        .difficulty-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            background: var(--bg-tertiary);
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-top: 1px solid var(--border);
+            min-height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-bar.success {
+            background: rgba(0, 184, 148, 0.1);
+            color: var(--success);
+            border-color: rgba(0, 184, 148, 0.2);
+        }
+
+        /* 动画类 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(10deg); }
+            50% { transform: scale(1.1) rotate(-10deg); }
+            75% { transform: scale(1.15) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        @keyframes moveAnimation {
+            from { transform: translate(var(--from-x), var(--from-y)); }
+            to { transform: translate(0, 0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .celebrate {
+            animation: celebrate 0.8s ease;
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease infinite;
+        }
+
+        .shake {
+            animation: shake 0.5s ease;
+        }
+
+        .moving {
+            animation: moveAnimation 0.2s ease;
+        }
+
+        /* 胜利动画 */
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .control-panel {
+                border-left: none;
+                border-top: 1px solid var(--border);
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+
+            .game-stats,
+            .level-info,
+            .level-selector,
+            .game-controls,
+            .instructions,
+            .difficulty-info {
+                flex: 1;
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                border-radius: 20px;
+            }
+
+            .header {
+                padding: 20px;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .game-area {
+                padding: 20px;
+            }
+
+            .board-container {
+                padding: 15px;
+            }
+
+            .cell {
+                font-size: 1.5rem;
+            }
+
+            .control-panel {
+                padding: 20px;
+            }
+
+            .level-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .level-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-stats,
+            .level-info,
+            .level-selector,
+            .game-controls,
+            .instructions,
+            .difficulty-info {
+                min-width: 100%;
+            }
+        }
+
+        /* 触摸设备优化 */
+        @media (hover: none) {
+            .stat-item:hover,
+            .level-btn:hover,
+            .btn:hover {
+                transform: none;
+            }
+
+            .cell:hover {
+                transform: none;
+                box-shadow: 0 4px 6px var(--shadow);
+                border-color: transparent;
+            }
+        }
+
+        /* 移动端触摸反馈 */
+        .cell:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="title-container">
+                <div class="game-icon">
+                    <i class="fas fa-puzzle-piece"></i>
+                </div>
+                <div>
+                    <h1 class="game-title">高难度华容道</h1>
+                    <p class="game-subtitle">经典滑块拼图，25个精心设计的高难度关卡</p>
+                </div>
+            </div>
+
+            <!-- 主题切换 -->
+            <div class="theme-toggle-container">
+                <div class="theme-toggle" id="theme-toggle">
+                    <div class="toggle-slider">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 游戏区域 -->
+            <div class="game-area">
+                <div class="board-container">
+                    <div id="game-board" class="fade-in"></div>
+                </div>
+            </div>
+
+            <!-- 控制面板 -->
+            <div class="control-panel">
+                <!-- 游戏状态 -->
+                <div class="game-stats">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-icon">🏆</div>
+                            <div class="stat-value" id="level-number">1</div>
+                            <div class="stat-label">当前关卡</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-value" id="moves-count">0</div>
+                            <div class="stat-label">移动次数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon">⏱️</div>
+                            <div class="stat-value" id="time-elapsed">0s</div>
+                            <div class="stat-label">用时</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-value" id="completed-levels">0</div>
+                            <div class="stat-label">已完成</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 关卡信息 -->
+                <div class="level-info">
+                    <h3>关卡信息</h3>
+                    <div class="level-details">
+                        <div class="level-detail">
+                            <span class="detail-label">关卡名称</span>
+                            <span class="detail-value" id="level-name">入门关卡</span>
+                        </div>
+                        <div class="level-detail">
+                            <span class="detail-label">棋盘大小</span>
+                            <span class="detail-value" id="board-size">4×4</span>
+                        </div>
+                        <div class="level-detail">
+                            <span class="detail-label">最佳步数</span>
+                            <span class="detail-value" id="best-moves">-</span>
+                        </div>
+                        <div class="level-detail">
+                            <span class="detail-label">最佳用时</span>
+                            <span class="detail-value" id="best-time">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 关卡选择 -->
+                <div class="level-selector">
+                    <div class="level-navigation">
+                        <h3>关卡选择 (共25关)</h3>
+                        <div class="level-pagination">
+                            <span id="current-page">1-5</span>
+                        </div>
+                    </div>
+                    <div class="level-grid" id="level-grid"></div>
+                </div>
+
+                <!-- 游戏控制 -->
+                <div class="game-controls">
+                    <div class="level-buttons">
+                        <button class="btn btn-primary" id="prev-level-btn">
+                            <i class="fas fa-arrow-left"></i> 上一关
+                        </button>
+                        <button class="btn btn-danger" id="next-level-btn">
+                            下一关 <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div class="controls-grid">
+                        <button class="btn btn-success" id="restart-btn">
+                            <i class="fas fa-redo"></i> 重新开始
+                        </button>
+                        <button class="btn btn-warning" id="undo-btn">
+                            <i class="fas fa-undo"></i> 撤销
+                        </button>
+                        <button class="btn btn-primary" id="hint-btn">
+                            <i class="fas fa-lightbulb"></i> 提示
+                        </button>
+                        <button class="btn btn-danger" id="solve-btn">
+                            <i class="fas fa-robot"></i> 自动求解
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 操作提示 -->
+                <div class="instructions">
+                    <h3>操作说明</h3>
+                    <div class="instruction-item">
+                        <i class="fas fa-mouse-pointer instruction-icon"></i>
+                        <span>点击方块移动到相邻空位</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-arrows-alt instruction-icon"></i>
+                        <span>特殊方块（黑色）为移动目标</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-undo instruction-icon"></i>
+                        <span>Z键/按钮：撤销上一步</span>
+                    </div>
+                    <div class="instruction-item">
+                        <i class="fas fa-redo instruction-icon"></i>
+                        <span>R键/按钮：重新开始</span>
+                    </div>
+                </div>
+
+                <!-- 难度说明 -->
+                <div class="difficulty-info">
+                    <h3>关卡难度</h3>
+                    <div class="difficulty-bars" id="difficulty-bars"></div>
+                    <div class="difficulty-text" id="difficulty-text">简单</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar" id="status-bar">
+            游戏已就绪！点击方块开始移动
+        </div>
+    </div>
+
+    <script>
+        class KlotskiGame {
+            constructor() {
+                // 游戏配置
+                this.boardSize = { rows: 0, cols: 0 };
+                this.board = [];
+                this.emptyPos = { row: 0, col: 0 };
+                this.currentLevel = 0;
+                this.moves = 0;
+                this.completedLevels = 0;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.elapsedTime = 0;
+                this.history = [];
+                this.maxUndoSteps = 100;
+                this.solution = null;
+                this.showingSolution = false;
+
+                // 25个高难度关卡设计
+                this.levels = this.createLevels();
+
+                // 获取DOM元素
+                this.elements = {
+                    gameBoard: document.getElementById('game-board'),
+                    levelNumber: document.getElementById('level-number'),
+                    movesCount: document.getElementById('moves-count'),
+                    timeElapsed: document.getElementById('time-elapsed'),
+                    completedLevels: document.getElementById('completed-levels'),
+                    levelName: document.getElementById('level-name'),
+                    boardSize: document.getElementById('board-size'),
+                    bestMoves: document.getElementById('best-moves'),
+                    bestTime: document.getElementById('best-time'),
+                    levelGrid: document.getElementById('level-grid'),
+                    currentPage: document.getElementById('current-page'),
+                    statusBar: document.getElementById('status-bar'),
+                    themeToggle: document.getElementById('theme-toggle'),
+                    difficultyBars: document.getElementById('difficulty-bars'),
+                    difficultyText: document.getElementById('difficulty-text'),
+
+                    // 按钮
+                    prevLevelBtn: document.getElementById('prev-level-btn'),
+                    nextLevelBtn: document.getElementById('next-level-btn'),
+                    restartBtn: document.getElementById('restart-btn'),
+                    undoBtn: document.getElementById('undo-btn'),
+                    hintBtn: document.getElementById('hint-btn'),
+                    solveBtn: document.getElementById('solve-btn')
+                };
+
+                // 初始化游戏
+                this.init();
+            }
+
+            init() {
+                // 设置事件监听器
+                this.setupEventListeners();
+
+                // 检查主题设置
+                this.checkTheme();
+
+                // 加载保存的进度
+                this.loadProgress();
+
+                // 初始化关卡选择器
+                this.initLevelSelector();
+
+                // 开始游戏
+                this.startLevel(this.currentLevel);
+
+                // 启动计时器
+                this.startTimer();
+            }
+
+            createLevels() {
+                return [
+                    // 关卡1-5：4x4基础
+                    {
+                        name: "入门关卡",
+                        difficulty: 1,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [1, 2, 3, 4],
+                            [5, 6, 7, 8],
+                            [9, 10, 11, 12],
+                            [13, 14, 15, 0]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 20
+                    },
+                    {
+                        name: "简单打乱",
+                        difficulty: 1,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [1, 2, 3, 4],
+                            [5, 6, 8, 12],
+                            [9, 10, 7, 11],
+                            [13, 14, 0, 15]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 25
+                    },
+                    {
+                        name: "螺旋迷阵",
+                        difficulty: 2,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [12, 1, 2, 3],
+                            [11, 0, 4, 5],
+                            [10, 9, 8, 6],
+                            [13, 14, 15, 7]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 30
+                    },
+                    {
+                        name: "对角线",
+                        difficulty: 2,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [0, 1, 2, 3],
+                            [4, 5, 6, 7],
+                            [8, 9, 10, 11],
+                            [12, 13, 14, 15]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 35
+                    },
+                    {
+                        name: "反向排列",
+                        difficulty: 2,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [15, 14, 13, 12],
+                            [11, 10, 9, 8],
+                            [7, 6, 5, 4],
+                            [3, 2, 1, 0]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 40
+                    },
+
+                    // 关卡6-10：4x4进阶
+                    {
+                        name: "蛇形排列",
+                        difficulty: 3,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [1, 2, 3, 4],
+                            [8, 7, 6, 5],
+                            [9, 10, 11, 12],
+                            [0, 15, 14, 13]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 45
+                    },
+                    {
+                        name: "交错迷阵",
+                        difficulty: 3,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [3, 6, 9, 12],
+                            [2, 5, 8, 11],
+                            [1, 4, 7, 10],
+                            [0, 13, 14, 15]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 50
+                    },
+                    {
+                        name: "四角难题",
+                        difficulty: 3,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [15, 2, 3, 4],
+                            [5, 6, 7, 8],
+                            [9, 10, 11, 12],
+                            [13, 14, 1, 0]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 55
+                    },
+                    {
+                        name: "中心漩涡",
+                        difficulty: 4,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [1, 2, 3, 4],
+                            [12, 6, 7, 8],
+                            [11, 10, 9, 5],
+                            [0, 15, 14, 13]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 60
+                    },
+                    {
+                        name: "边缘困境",
+                        difficulty: 4,
+                        size: { rows: 4, cols: 4 },
+                        layout: [
+                            [4, 3, 2, 1],
+                            [5, 6, 7, 8],
+                            [12, 11, 10, 9],
+                            [0, 15, 14, 13]
+                        ],
+                        specialBlock: 15,
+                        minMoves: 65
+                    },
+
+                    // 关卡11-15：5x5挑战
+                    {
+                        name: "5阶入门",
+                        difficulty: 3,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [1, 2, 3, 4, 5],
+                            [6, 7, 8, 9, 10],
+                            [11, 12, 13, 14, 15],
+                            [16, 17, 18, 19, 20],
+                            [21, 22, 23, 24, 0]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 70
+                    },
+                    {
+                        name: "5阶螺旋",
+                        difficulty: 4,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [1, 2, 3, 4, 5],
+                            [16, 17, 18, 19, 6],
+                            [15, 24, 0, 20, 7],
+                            [14, 23, 22, 21, 8],
+                            [13, 12, 11, 10, 9]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 80
+                    },
+                    {
+                        name: "蛇形矩阵",
+                        difficulty: 4,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [1, 2, 3, 4, 5],
+                            [10, 9, 8, 7, 6],
+                            [11, 12, 13, 14, 15],
+                            [20, 19, 18, 17, 16],
+                            [21, 22, 23, 24, 0]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 85
+                    },
+                    {
+                        name: "中心扩散",
+                        difficulty: 5,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [24, 23, 22, 21, 20],
+                            [1, 2, 3, 4, 19],
+                            [6, 7, 8, 9, 18],
+                            [11, 12, 13, 14, 17],
+                            [16, 15, 10, 5, 0]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 90
+                    },
+                    {
+                        name: "对角挑战",
+                        difficulty: 5,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [0, 1, 2, 3, 4],
+                            [5, 6, 7, 8, 9],
+                            [10, 11, 12, 13, 14],
+                            [15, 16, 17, 18, 19],
+                            [20, 21, 22, 23, 24]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 95
+                    },
+
+                    // 关卡16-20：5x5高难度
+                    {
+                        name: "逆序排列",
+                        difficulty: 5,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [24, 23, 22, 21, 20],
+                            [19, 18, 17, 16, 15],
+                            [14, 13, 12, 11, 10],
+                            [9, 8, 7, 6, 5],
+                            [4, 3, 2, 1, 0]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 100
+                    },
+                    {
+                        name: "棋盘模式",
+                        difficulty: 6,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [1, 24, 2, 23, 3],
+                            [22, 4, 21, 5, 20],
+                            [6, 19, 7, 18, 8],
+                            [17, 9, 16, 10, 15],
+                            [11, 14, 12, 13, 0]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 110
+                    },
+                    {
+                        name: "之字形",
+                        difficulty: 6,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [1, 10, 11, 20, 21],
+                            [2, 9, 12, 19, 22],
+                            [3, 8, 13, 18, 23],
+                            [4, 7, 14, 17, 24],
+                            [5, 6, 15, 16, 0]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 120
+                    },
+                    {
+                        name: "随机迷阵",
+                        difficulty: 7,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [7, 13, 19, 2, 8],
+                            [14, 0, 5, 11, 17],
+                            [21, 3, 9, 15, 22],
+                            [4, 10, 16, 23, 6],
+                            [12, 18, 24, 1, 20]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 130
+                    },
+                    {
+                        name: "大师布局",
+                        difficulty: 7,
+                        size: { rows: 5, cols: 5 },
+                        layout: [
+                            [17, 23, 4, 10, 16],
+                            [22, 3, 9, 15, 21],
+                            [2, 8, 14, 20, 1],
+                            [7, 13, 19, 0, 6],
+                            [12, 18, 24, 5, 11]
+                        ],
+                        specialBlock: 24,
+                        minMoves: 140
+                    },
+
+                    // 关卡21-25：终极挑战
+                    {
+                        name: "六边迷阵",
+                        difficulty: 8,
+                        size: { rows: 6, cols: 6 },
+                        layout: [
+                            [1, 2, 3, 4, 5, 6],
+                            [7, 8, 9, 10, 11, 12],
+                            [13, 14, 15, 16, 17, 18],
+                            [19, 20, 21, 22, 23, 24],
+                            [25, 26, 27, 28, 29, 30],
+                            [31, 32, 33, 34, 35, 0]
+                        ],
+                        specialBlock: 35,
+                        minMoves: 150
+                    },
+                    {
+                        name: "六阶螺旋",
+                        difficulty: 8,
+                        size: { rows: 6, cols: 6 },
+                        layout: [
+                            [1, 2, 3, 4, 5, 6],
+                            [20, 21, 22, 23, 24, 7],
+                            [19, 32, 33, 34, 25, 8],
+                            [18, 31, 0, 35, 26, 9],
+                            [17, 30, 29, 28, 27, 10],
+                            [16, 15, 14, 13, 12, 11]
+                        ],
+                        specialBlock: 35,
+                        minMoves: 160
+                    },
+                    {
+                        name: "六阶逆序",
+                        difficulty: 9,
+                        size: { rows: 6, cols: 6 },
+                        layout: [
+                            [35, 34, 33, 32, 31, 30],
+                            [29, 28, 27, 26, 25, 24],
+                            [23, 22, 21, 20, 19, 18],
+                            [17, 16, 15, 14, 13, 12],
+                            [11, 10, 9, 8, 7, 6],
+                            [5, 4, 3, 2, 1, 0]
+                        ],
+                        specialBlock: 35,
+                        minMoves: 170
+                    },
+                    {
+                        name: "随机大师",
+                        difficulty: 9,
+                        size: { rows: 6, cols: 6 },
+                        layout: [
+                            [17, 23, 29, 4, 10, 16],
+                            [22, 28, 3, 9, 15, 21],
+                            [27, 2, 8, 14, 20, 26],
+                            [1, 7, 13, 19, 25, 31],
+                            [6, 12, 18, 24, 30, 35],
+                            [11, 0, 34, 5, 32, 33]
+                        ],
+                        specialBlock: 35,
+                        minMoves: 180
+                    },
+                    {
+                        name: "终极挑战",
+                        difficulty: 10,
+                        size: { rows: 6, cols: 6 },
+                        layout: [
+                            [35, 1, 2, 3, 4, 5],
+                            [6, 7, 8, 9, 10, 11],
+                            [12, 13, 14, 15, 16, 17],
+                            [18, 19, 20, 21, 22, 23],
+                            [24, 25, 26, 27, 28, 29],
+                            [30, 31, 32, 33, 34, 0]
+                        ],
+                        specialBlock: 35,
+                        minMoves: 200
+                    }
+                ];
+            }
+
+            setupEventListeners() {
+                // 键盘控制
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+
+                // 主题切换
+                this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
+
+                // 控制按钮
+                this.elements.prevLevelBtn.addEventListener('click', () => this.prevLevel());
+                this.elements.nextLevelBtn.addEventListener('click', () => this.nextLevel());
+                this.elements.restartBtn.addEventListener('click', () => this.restartLevel());
+                this.elements.undoBtn.addEventListener('click', () => this.undo());
+                this.elements.hintBtn.addEventListener('click', () => this.showHint());
+                this.elements.solveBtn.addEventListener('click', () => this.solve());
+            }
+
+            handleKeyPress(e) {
+                if (this.showingSolution) return;
+
+                switch (e.key) {
+                    case 'r':
+                    case 'R':
+                        e.preventDefault();
+                        this.restartLevel();
+                        break;
+                    case 'z':
+                    case 'Z':
+                    case 'u':
+                    case 'U':
+                        e.preventDefault();
+                        this.undo();
+                        break;
+                    case 'h':
+                    case 'H':
+                        e.preventDefault();
+                        this.showHint();
+                        break;
+                    case 'ArrowLeft':
+                        this.moveByDirection('left');
+                        break;
+                    case 'ArrowRight':
+                        this.moveByDirection('right');
+                        break;
+                    case 'ArrowUp':
+                        this.moveByDirection('up');
+                        break;
+                    case 'ArrowDown':
+                        this.moveByDirection('down');
+                        break;
+                }
+            }
+
+            startLevel(levelIndex) {
+                // 停止当前计时器
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+
+                // 重置游戏状态
+                this.currentLevel = levelIndex;
+                this.moves = 0;
+                this.startTime = Date.now();
+                this.elapsedTime = 0;
+                this.history = [];
+                this.showingSolution = false;
+                this.solution = null;
+
+                // 获取关卡数据
+                const level = this.levels[levelIndex];
+                if (!level) return;
+
+                // 初始化游戏状态
+                this.boardSize = level.size;
+                this.board = JSON.parse(JSON.stringify(level.layout));
+
+                // 查找空位
+                this.findEmptyPosition();
+
+                // 更新UI
+                this.updateUI();
+                this.updateDifficultyDisplay();
+
+                // 创建游戏板
+                this.createBoard();
+
+                // 绘制游戏
+                this.drawBoard();
+
+                // 更新状态栏
+                this.elements.statusBar.textContent = `关卡 ${levelIndex + 1}: ${level.name} - 点击方块移动到空位`;
+                this.elements.statusBar.className = 'status-bar fade-in';
+
+                // 启动计时器
+                this.startTimer();
+
+                // 保存进度
+                this.saveProgress();
+            }
+
+            createBoard() {
+                const board = this.elements.gameBoard;
+                const { rows, cols } = this.boardSize;
+
+                // 设置网格样式
+                board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+                // 清空现有单元格
+                board.innerHTML = '';
+
+                // 创建单元格
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const cell = document.createElement('div');
+                        const value = this.board[row][col];
+
+                        cell.className = 'cell';
+                        if (value === 0) {
+                            cell.classList.add('empty');
+                            cell.textContent = '';
+                        } else {
+                            cell.textContent = value;
+                            const sizeClass = this.getSizeClass(value);
+                            cell.classList.add(sizeClass);
+
+                            // 如果是特殊方块
+                            if (value === this.levels[this.currentLevel].specialBlock) {
+                                cell.classList.add('special');
+                            }
+
+                            // 添加点击事件
+                            cell.addEventListener('click', () => this.handleCellClick(row, col));
+                        }
+
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        cell.dataset.value = value;
+
+                        board.appendChild(cell);
+                    }
+                }
+            }
+
+            getSizeClass(value) {
+                if (value <= 2) return 'size-2';
+                if (value <= 4) return 'size-4';
+                if (value <= 8) return 'size-8';
+                if (value <= 16) return 'size-16';
+                if (value <= 32) return 'size-32';
+                if (value <= 64) return 'size-64';
+                if (value <= 128) return 'size-128';
+                if (value <= 256) return 'size-256';
+                if (value <= 512) return 'size-512';
+                if (value <= 1024) return 'size-1024';
+                return 'size-2048';
+            }
+
+            drawBoard() {
+                const cells = this.elements.gameBoard.children;
+                const { rows, cols } = this.boardSize;
+
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const index = row * cols + col;
+                        const cell = cells[index];
+                        const value = this.board[row][col];
+
+                        // 更新单元格内容
+                        if (value === 0) {
+                            cell.textContent = '';
+                            cell.className = 'cell empty';
+                        } else {
+                            cell.textContent = value;
+                            const sizeClass = this.getSizeClass(value);
+                            cell.className = 'cell ' + sizeClass;
+
+                            // 如果是特殊方块
+                            if (value === this.levels[this.currentLevel].specialBlock) {
+                                cell.classList.add('special');
+                            }
+                        }
+
+                        cell.dataset.value = value;
+                    }
+                }
+            }
+
+            handleCellClick(row, col) {
+                if (this.showingSolution) return;
+
+                const value = this.board[row][col];
+                if (value === 0) return;
+
+                // 检查是否可以移动到空位
+                if (this.canMoveToEmpty(row, col)) {
+                    this.moveToEmpty(row, col);
+                }
+            }
+
+            canMoveToEmpty(row, col) {
+                const { row: emptyRow, col: emptyCol } = this.emptyPos;
+
+                // 检查是否相邻
+                const rowDiff = Math.abs(row - emptyRow);
+                const colDiff = Math.abs(col - emptyCol);
+
+                return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+            }
+
+            moveToEmpty(row, col) {
+                // 保存当前状态到历史记录
+                this.saveToHistory();
+
+                // 交换位置
+                const { row: emptyRow, col: emptyCol } = this.emptyPos;
+                this.board[emptyRow][emptyCol] = this.board[row][col];
+                this.board[row][col] = 0;
+                this.emptyPos = { row, col };
+
+                // 更新移动计数
+                this.moves++;
+                this.elements.movesCount.textContent = this.moves;
+
+                // 重新绘制
+                this.drawBoard();
+
+                // 检查是否完成
+                this.checkCompletion();
+
+                // 保存进度
+                this.saveProgress();
+            }
+
+            moveByDirection(direction) {
+                const { row, col } = this.emptyPos;
+                let targetRow = row;
+                let targetCol = col;
+
+                switch (direction) {
+                    case 'left':
+                        if (col < this.boardSize.cols - 1) targetCol++;
+                        break;
+                    case 'right':
+                        if (col > 0) targetCol--;
+                        break;
+                    case 'up':
+                        if (row < this.boardSize.rows - 1) targetRow++;
+                        break;
+                    case 'down':
+                        if (row > 0) targetRow--;
+                        break;
+                }
+
+                if (targetRow !== row || targetCol !== col) {
+                    this.moveToEmpty(targetRow, targetCol);
+                }
+            }
+
+            findEmptyPosition() {
+                const { rows, cols } = this.boardSize;
+
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        if (this.board[row][col] === 0) {
+                            this.emptyPos = { row, col };
+                            return;
+                        }
+                    }
+                }
+            }
+
+            checkCompletion() {
+                const level = this.levels[this.currentLevel];
+                const { rows, cols } = this.boardSize;
+                const totalCells = rows * cols;
+
+                // 检查是否按顺序排列（特殊方块在最后）
+                let isComplete = true;
+                let expected = 1;
+
+                for (let row = 0; row < rows && isComplete; row++) {
+                    for (let col = 0; col < cols && isComplete; col++) {
+                        const value = this.board[row][col];
+
+                        // 跳过空位
+                        if (value === 0) {
+                            if (expected !== totalCells) {
+                                isComplete = false;
+                            }
+                            continue;
+                        }
+
+                        // 检查顺序
+                        if (value !== expected) {
+                            isComplete = false;
+                        }
+                        expected++;
+                    }
+                }
+
+                if (isComplete && !this.showingSolution) {
+                    this.onLevelComplete();
+                }
+
+                return isComplete;
+            }
+
+            onLevelComplete() {
+                // 停止计时器
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+
+                // 更新完成关卡数
+                this.completedLevels = Math.max(this.completedLevels, this.currentLevel + 1);
+                this.elements.completedLevels.textContent = this.completedLevels;
+
+                // 保存最佳成绩
+                this.saveBestScore();
+
+                // 显示成功消息
+                const level = this.levels[this.currentLevel];
+                this.elements.statusBar.textContent = `🎉 恭喜！完成关卡 ${this.currentLevel + 1}！用时: ${this.formatTime(this.elapsedTime)}，步数: ${this.moves}`;
+                this.elements.statusBar.className = 'status-bar success fade-in celebrate';
+
+                // 更新关卡选择器
+                this.updateLevelSelector();
+
+                // 保存进度
+                this.saveProgress();
+
+                // 播放庆祝动画
+                this.createConfetti();
+            }
+
+            saveBestScore() {
+                const levelId = this.currentLevel;
+                const bestScores = JSON.parse(localStorage.getItem('klotski-best-scores') || '{}');
+
+                if (!bestScores[levelId] ||
+                    this.moves < bestScores[levelId].moves ||
+                    (this.moves === bestScores[levelId].moves && this.elapsedTime < bestScores[levelId].time)) {
+
+                    bestScores[levelId] = {
+                        moves: this.moves,
+                        time: this.elapsedTime,
+                        timestamp: Date.now()
+                    };
+
+                    localStorage.setItem('klotski-best-scores', JSON.stringify(bestScores));
+                    this.updateBestScoreDisplay();
+                }
+            }
+
+            updateBestScoreDisplay() {
+                const bestScores = JSON.parse(localStorage.getItem('klotski-best-scores') || '{}');
+                const levelId = this.currentLevel;
+                const bestScore = bestScores[levelId];
+
+                if (bestScore) {
+                    this.elements.bestMoves.textContent = bestScore.moves;
+                    this.elements.bestTime.textContent = this.formatTime(bestScore.time);
+                } else {
+                    this.elements.bestMoves.textContent = '-';
+                    this.elements.bestTime.textContent = '-';
+                }
+            }
+
+            restartLevel() {
+                this.startLevel(this.currentLevel);
+                this.elements.statusBar.textContent = `重新开始关卡 ${this.currentLevel + 1}`;
+                this.elements.statusBar.className = 'status-bar fade-in';
+            }
+
+            prevLevel() {
+                if (this.currentLevel > 0) {
+                    this.startLevel(this.currentLevel - 1);
+                }
+            }
+
+            nextLevel() {
+                if (this.currentLevel < this.levels.length - 1) {
+                    this.startLevel(this.currentLevel + 1);
+                } else {
+                    this.elements.statusBar.textContent = '🎊 恭喜你完成了所有关卡！';
+                    this.elements.statusBar.className = 'status-bar success fade-in';
+                }
+            }
+
+            undo() {
+                if (this.history.length > 0 && !this.showingSolution) {
+                    const previousState = this.history.pop();
+                    this.board = previousState.board;
+                    this.emptyPos = previousState.emptyPos;
+                    this.moves--;
+                    this.elements.movesCount.textContent = this.moves;
+                    this.drawBoard();
+
+                    this.elements.statusBar.textContent = '撤销了上一步操作';
+                    this.elements.statusBar.className = 'status-bar fade-in';
+                } else {
+                    this.elements.statusBar.textContent = '没有可撤销的操作';
+                    this.elements.statusBar.className = 'status-bar fade-in';
+                }
+            }
+
+            saveToHistory() {
+                if (this.showingSolution) return;
+
+                // 限制历史记录长度
+                if (this.history.length >= this.maxUndoSteps) {
+                    this.history.shift();
+                }
+
+                // 深拷贝当前状态
+                const stateCopy = {
+                    board: JSON.parse(JSON.stringify(this.board)),
+                    emptyPos: { ...this.emptyPos }
+                };
+
+                this.history.push(stateCopy);
+            }
+
+            showHint() {
+                if (this.showingSolution) return;
+
+                // 简单的提示：显示可以移动的方块
+                const { row: emptyRow, col: emptyCol } = this.emptyPos;
+                const { rows, cols } = this.boardSize;
+                let hintCells = [];
+
+                // 检查上下左右四个方向的方块
+                const directions = [
+                    { row: emptyRow - 1, col: emptyCol },
+                    { row: emptyRow + 1, col: emptyCol },
+                    { row: emptyRow, col: emptyCol - 1 },
+                    { row: emptyRow, col: emptyCol + 1 }
+                ];
+
+                for (const dir of directions) {
+                    if (dir.row >= 0 && dir.row < rows && dir.col >= 0 && dir.col < cols) {
+                        if (this.board[dir.row][dir.col] !== 0) {
+                            hintCells.push({ row: dir.row, col: dir.col });
+                        }
+                    }
+                }
+
+                if (hintCells.length > 0) {
+                    // 高亮提示的方块
+                    const cells = this.elements.gameBoard.children;
+                    for (const hint of hintCells) {
+                        const index = hint.row * cols + hint.col;
+                        const cell = cells[index];
+                        cell.classList.add('pulse');
+                    }
+
+                    // 3秒后移除提示
+                    setTimeout(() => {
+                        for (const hint of hintCells) {
+                            const index = hint.row * cols + hint.col;
+                            const cell = cells[index];
+                            cell.classList.remove('pulse');
+                        }
+                    }, 3000);
+
+                    this.elements.statusBar.textContent = `高亮了 ${hintCells.length} 个可以移动的方块`;
+                    this.elements.statusBar.className = 'status-bar fade-in';
+                }
+            }
+
+            solve() {
+                if (this.showingSolution) return;
+
+                // 简单的自动求解：使用BFS算法（限制深度）
+                this.elements.statusBar.textContent = '正在计算解决方案...';
+                this.elements.statusBar.className = 'status-bar fade-in';
+
+                setTimeout(() => {
+                    this.solution = this.bfsSolve(1000); // 限制搜索1000个状态
+
+                    if (this.solution && this.solution.length > 0) {
+                        this.showingSolution = true;
+                        this.animateSolution();
+                    } else {
+                        this.elements.statusBar.textContent = '无法找到解决方案，尝试次数太多';
+                        this.elements.statusBar.className = 'status-bar fade-in';
+                    }
+                }, 100);
+            }
+
+            bfsSolve(maxStates) {
+                const targetBoard = this.createTargetBoard();
+                const visited = new Set();
+                const queue = [{
+                    board: JSON.parse(JSON.stringify(this.board)),
+                    emptyPos: { ...this.emptyPos },
+                    moves: [],
+                    depth: 0
+                }];
+
+                visited.add(this.boardToString(queue[0].board));
+
+                while (queue.length > 0 && visited.size < maxStates) {
+                    const current = queue.shift();
+
+                    // 检查是否到达目标
+                    if (this.boardsEqual(current.board, targetBoard)) {
+                        return current.moves;
+                    }
+
+                    // 生成下一步状态
+                    const nextStates = this.generateNextStates(current.board, current.emptyPos);
+
+                    for (const nextState of nextStates) {
+                        const boardStr = this.boardToString(nextState.board);
+
+                        if (!visited.has(boardStr)) {
+                            visited.add(boardStr);
+                            queue.push({
+                                board: nextState.board,
+                                emptyPos: nextState.emptyPos,
+                                moves: [...current.moves, nextState.move],
+                                depth: current.depth + 1
+                            });
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            generateNextStates(board, emptyPos) {
+                const { rows, cols } = this.boardSize;
+                const { row: emptyRow, col: emptyCol } = emptyPos;
+                const nextStates = [];
+
+                // 四个方向
+                const directions = [
+                    { row: -1, col: 0, dir: 'down' },
+                    { row: 1, col: 0, dir: 'up' },
+                    { row: 0, col: -1, dir: 'right' },
+                    { row: 0, col: 1, dir: 'left' }
+                ];
+
+                for (const dir of directions) {
+                    const newRow = emptyRow + dir.row;
+                    const newCol = emptyCol + dir.col;
+
+                    if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                        const newBoard = JSON.parse(JSON.stringify(board));
+                        // 交换空位和方块
+                        newBoard[emptyRow][emptyCol] = newBoard[newRow][newCol];
+                        newBoard[newRow][newCol] = 0;
+
+                        nextStates.push({
+                            board: newBoard,
+                            emptyPos: { row: newRow, col: newCol },
+                            move: { from: { row: newRow, col: newCol }, to: emptyPos, dir: dir.dir }
+                        });
+                    }
+                }
+
+                return nextStates;
+            }
+
+            animateSolution() {
+                if (!this.solution || this.solution.length === 0) return;
+
+                let step = 0;
+                const animateStep = () => {
+                    if (step >= this.solution.length) {
+                        this.showingSolution = false;
+                        this.checkCompletion();
+                        return;
+                    }
+
+                    const move = this.solution[step];
+                    this.moveToEmpty(move.from.row, move.from.col);
+                    step++;
+
+                    setTimeout(animateStep, 300); // 每步300毫秒
+                };
+
+                animateStep();
+            }
+
+            createTargetBoard() {
+                const { rows, cols } = this.boardSize;
+                const totalCells = rows * cols;
+                const targetBoard = [];
+                let value = 1;
+
+                for (let row = 0; row < rows; row++) {
+                    targetBoard[row] = [];
+                    for (let col = 0; col < cols; col++) {
+                        if (value === totalCells) {
+                            targetBoard[row][col] = 0;
+                        } else {
+                            targetBoard[row][col] = value++;
+                        }
+                    }
+                }
+
+                return targetBoard;
+            }
+
+            boardToString(board) {
+                return board.flat().join(',');
+            }
+
+            boardsEqual(board1, board2) {
+                const { rows, cols } = this.boardSize;
+
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        if (board1[row][col] !== board2[row][col]) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            startTimer() {
+                this.startTime = Date.now();
+
+                this.timerInterval = setInterval(() => {
+                    this.elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
+                    this.elements.timeElapsed.textContent = `${this.elapsedTime}s`;
+                }, 1000);
+            }
+
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
+            }
+
+            updateUI() {
+                const level = this.levels[this.currentLevel];
+
+                this.elements.levelNumber.textContent = this.currentLevel + 1;
+                this.elements.movesCount.textContent = this.moves;
+                this.elements.completedLevels.textContent = this.completedLevels;
+                this.elements.levelName.textContent = level.name;
+                this.elements.boardSize.textContent = `${level.size.rows}×${level.size.cols}`;
+
+                this.updateBestScoreDisplay();
+            }
+
+            updateDifficultyDisplay() {
+                const level = this.levels[this.currentLevel];
+                const difficulty = level.difficulty;
+
+                // 更新难度条
+                this.elements.difficultyBars.innerHTML = '';
+                for (let i = 1; i <= 10; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'difficulty-bar';
+                    if (i <= difficulty) {
+                        bar.classList.add('active');
+                    }
+                    this.elements.difficultyBars.appendChild(bar);
+                }
+
+                // 更新难度文本
+                let difficultyText = '';
+                if (difficulty <= 2) difficultyText = '简单';
+                else if (difficulty <= 4) difficultyText = '中等';
+                else if (difficulty <= 6) difficultyText = '困难';
+                else if (difficulty <= 8) difficultyText = '专家';
+                else difficultyText = '地狱';
+
+                this.elements.difficultyText.textContent = `${difficultyText} (${difficulty}/10)`;
+            }
+
+            initLevelSelector() {
+                const grid = this.elements.levelGrid;
+                grid.innerHTML = '';
+
+                for (let i = 0; i < this.levels.length; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'level-btn';
+                    btn.textContent = i + 1;
+                    btn.dataset.level = i;
+
+                    if (i === this.currentLevel) {
+                        btn.classList.add('current');
+                    } else if (i < this.completedLevels) {
+                        btn.classList.add('completed');
+                    } else if (i > this.completedLevels) {
+                        btn.classList.add('locked');
+                    }
+
+                    btn.addEventListener('click', () => {
+                        if (i <= this.completedLevels) {
+                            this.startLevel(i);
+                        }
+                    });
+
+                    grid.appendChild(btn);
+                }
+
+                // 更新分页显示
+                this.updatePageDisplay();
+            }
+
+            updateLevelSelector() {
+                const buttons = this.elements.levelGrid.children;
+
+                for (let i = 0; i < buttons.length; i++) {
+                    const btn = buttons[i];
+                    btn.classList.remove('current', 'completed', 'locked');
+
+                    if (i === this.currentLevel) {
+                        btn.classList.add('current');
+                    } else if (i < this.completedLevels) {
+                        btn.classList.add('completed');
+                    } else if (i > this.completedLevels) {
+                        btn.classList.add('locked');
+                    }
+                }
+
+                this.updatePageDisplay();
+            }
+
+            updatePageDisplay() {
+                const pageSize = 5;
+                const currentPage = Math.floor(this.currentLevel / pageSize) + 1;
+                const start = (currentPage - 1) * pageSize + 1;
+                const end = Math.min(start + pageSize - 1, this.levels.length);
+
+                this.elements.currentPage.textContent = `${start}-${end}`;
+            }
+
+            saveProgress() {
+                const progress = {
+                    currentLevel: this.currentLevel,
+                    completedLevels: this.completedLevels,
+                    moves: this.moves,
+                    elapsedTime: this.elapsedTime,
+                    board: this.board,
+                    emptyPos: this.emptyPos
+                };
+
+                localStorage.setItem('klotski-progress', JSON.stringify(progress));
+            }
+
+            loadProgress() {
+                const saved = localStorage.getItem('klotski-progress');
+                if (saved) {
+                    try {
+                        const progress = JSON.parse(saved);
+                        this.currentLevel = progress.currentLevel || 0;
+                        this.completedLevels = progress.completedLevels || 0;
+                        this.moves = progress.moves || 0;
+                        this.elapsedTime = progress.elapsedTime || 0;
+
+                        this.elements.completedLevels.textContent = this.completedLevels;
+                    } catch (e) {
+                        console.log('无法加载进度，开始新游戏');
+                    }
+                }
+            }
+
+            toggleTheme() {
+                document.body.classList.toggle('dark-mode');
+
+                // 更新按钮图标
+                const icon = this.elements.themeToggle.querySelector('i');
+                if (document.body.classList.contains('dark-mode')) {
+                    icon.className = 'fas fa-moon';
+                    localStorage.setItem('klotski-theme', 'dark');
+                } else {
+                    icon.className = 'fas fa-sun';
+                    localStorage.setItem('klotski-theme', 'light');
+                }
+            }
+
+            checkTheme() {
+                const savedTheme = localStorage.getItem('klotski-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.body.classList.add('dark-mode');
+                    const icon = this.elements.themeToggle.querySelector('i');
+                    icon.className = 'fas fa-moon';
+                }
+            }
+
+            createConfetti() {
+                const colors = ['#6c5ce7', '#00b894', '#fdcb6e', '#ff7675', '#a29bfe'];
+
+                for (let i = 0; i < 150; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+
+                        // 随机属性
+                        const size = Math.random() * 15 + 5;
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        const left = Math.random() * 100;
+                        const duration = Math.random() * 3 + 2;
+
+                        confetti.style.width = `${size}px`;
+                        confetti.style.height = `${size}px`;
+                        confetti.style.backgroundColor = color;
+                        confetti.style.left = `${left}%`;
+                        confetti.style.animationDuration = `${duration}s`;
+
+                        // 添加到页面
+                        document.body.appendChild(confetti);
+
+                        // 动画结束后移除
+                        setTimeout(() => {
+                            confetti.remove();
+                        }, duration * 1000);
+                    }, i * 20);
+                }
+            }
+        }
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new KlotskiGame();
+
+            // 添加开发者工具提示
+            console.log('%c🧩 高难度华容道游戏 %c\n✨ 25个精心设计的高难度关卡\n🎨 白昼/黑夜双模式\n📱 响应式设计，支持移动端\n🎯 支持撤销和自动求解\n💾 自动保存进度\n\n作者：AI助手',
+                'color: #6c5ce7; font-size: 20px; font-weight: bold;',
+                'color: #636e72; font-size: 14px;');
+        });
+    </script>
+</body>
+</html>
