@@ -1,8 +1,10 @@
-# main.py - Complete English Version with Component Integration
+# english_main.py - Complete version with splash screen
 import os
 import sys
 import json
 import datetime
+import random
+from datetime import datetime
 
 # ========== Import Kivy and other modules ==========
 from kivy import platform  # 检测当前平台(Android/iOS/桌面)
@@ -11,7 +13,7 @@ from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelItem  # 选项卡式界
 from kivy.core.window import Window  # 窗口管理
 from kivy.utils import get_color_from_hex  # 颜色工具
 from kivy.clock import Clock  # 定时器/调度器
-from kivy.properties import ObjectProperty, StringProperty  # 属性绑定
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty  # 属性绑定
 from kivy.uix.boxlayout import BoxLayout  # 盒子布局
 from kivy.uix.label import Label  # 文本标签
 from kivy.uix.button import Button  # 按钮
@@ -20,107 +22,174 @@ from kivy.uix.gridlayout import GridLayout  # 网格布局
 from kivy.uix.slider import Slider  # 滑块
 from kivy.uix.spinner import Spinner  # 下拉选择器
 from kivy.uix.popup import Popup  # 弹出窗口
+from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition  # 屏幕管理器
+from kivy.animation import Animation  # 动画
 
-# ========== 尝试导入组件 ==========
-try:
-    # 尝试从组件模块导入各功能标签页
-    from components.schedule_tab import ScheduleTab
-    from components.tracking_tab import TrackingTab
-    from components.personalization_tab import PersonalizationTab
+# ========== 每日一言数据库 ==========
+DAILY_QUOTES = [
+    # ... 你原来的名言保持不变 ...
 
-    COMPONENTS_AVAILABLE = True  # 标记组件可用
-    print("Components imported successfully")
-except ImportError as e:
-    print(f"Component import failed: {e}")
-    COMPONENTS_AVAILABLE = False  # 标记组件不可用
-
-    # ========== 组件不可用时使用回退实现 ==========
-    class ScheduleTab(BoxLayout):
-        """计划标签页的回退实现"""
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.orientation = 'vertical'
-            self.padding = 20
-            self.spacing = 10
-
-        def update_alarm_display(self):
-            """更新闹钟显示（空实现）"""
-            pass
-
-        def update_theme(self, weather_type):
-            """应用主题颜色（空实现）"""
-            pass
-
-    class TrackingTab(BoxLayout):
-        """跟踪标签页的回退实现"""
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.orientation = 'vertical'
-            self.padding = 10
-            self.spacing = 10
-
-
-        def update_theme(self, colors):
-            """应用主题颜色（空实现）"""
-            pass
-
-    class PersonalizationTab(BoxLayout):
-        """个性化设置标签页的回退实现"""
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.orientation = 'vertical'
-            self.padding = 20
-            self.spacing = 15
+    # 添加的生僻忧伤哲理诗词
+    {"text": "人生到处知何似，应似飞鸿踏雪泥。", "author": "苏轼《和子由渑池怀旧》"},
+    {"text": "世事短如春梦，人情薄似秋云。。", "author": "朱敦儒《西江月》"},
+    {"text": "人生自是有情痴，此恨不关风与月。", "author": "欧阳修《玉楼春》"},
+    {"text": "欲买桂花同载酒，终不似，少年游。", "author": "刘过《唐多令》"},
+    {"text": "大都好物不坚牢，彩云易散琉璃脆。", "author": "白居易《简简吟》"},
+    {"text": "人生无根蒂，飘如陌上尘。分散逐风转，此已非常身。", "author": "陶渊明《杂诗》"},
+    {"text": "世事一场大梦，人生几度秋凉。", "author": "苏轼《西江月》"},
+    {"text": "而今听雨僧庐下，鬓已星星也。悲欢离合总无情，一任阶前点滴到天明。", "author": "蒋捷《虞美人·听雨》"},
+    {"text": "此情可待成追忆，只是当时已惘然。", "author": "李商隐《锦瑟》"},
+    {"text": "人生似幻化，终当归空无。", "author": "陶渊明《归园田居》"},
+    {"text": "明月多情应笑我，笑我如今。辜负春心，独自闲行独自吟。", "author": "纳兰性德《采桑子》"},
+    {"text": "世路如今已惯，此心到处悠然。", "author": "张孝祥《西江月》"},
+    {"text": "浮生若梦，为欢几何？", "author": "李白《春夜宴从弟桃花园序》"},
+    {"text": "人生如逆旅，我亦是行人。", "author": "苏轼《临江仙》"},
+    {"text": "年年岁岁花相似，岁岁年年人不同。", "author": "刘希夷《代悲白头翁》"},
+    {"text": "惆怅东栏一株雪，人生看得几清明。", "author": "苏轼《东栏梨花》"},
+    {"text": "草木有本心，何求美人折。", "author": "张九龄《感遇》"},
+    {"text": "人生有酒须当醉，一滴何曾到九泉。", "author": "高翥《清明日对酒》"},
+    {"text": "谁教岁岁红莲夜，两处沉吟各自知。", "author": "姜夔《鹧鸪天·元夕有所梦》"},
+    {"text": "一往情深深几许？深山夕照深秋雨。", "author": "纳兰性德《蝶恋花》"},
+    {"text": "世事漫随流水，算来一梦浮生。", "author": "李煜《乌夜啼》"},
+    {"text": "人生天地间，忽如远行客。", "author": "《古诗十九首》"},
+    {"text": "似此星辰非昨夜，为谁风露立中宵。", "author": "黄景仁《绮怀》"},
+    {"text": "君埋泉下泥销骨，我寄人间雪满头。", "author": "白居易《梦微之》"},
+    {"text": "人生不相见，动如参与商。今夕复何夕，共此灯烛光。", "author": "杜甫《赠卫八处士》"},
+    {"text": "人生代代无穷已，江月年年望相似。", "author": "张若虚《春江花月夜》"},
+    {"text": "花开堪折直须折，莫待无花空折枝。", "author": "杜秋娘《金缕衣》"},
+    {"text": "壮年听雨客舟中，江阔云低，断雁叫西风。", "author": "蒋捷《虞美人·听雨》"},
+    {"text": "满目山河空念远，落花风雨更伤春。不如怜取眼前人。", "author": "晏殊《浣溪沙》"},
+    {"text": "自是人生长恨水长东。", "author": "李煜《相见欢》"}
+]
 
 
-        def update_theme(self, colors):
-            """应用主题颜色（空实现）"""
-            pass
+# ========== 开屏界面类 ==========
+class SplashScreen(Screen):
+    """开屏动画界面"""
+    quote_text = StringProperty("")  # 名言文本
+    quote_author = StringProperty("")  # 名言作者
+    current_time = StringProperty("")  # 当前时间
+    date_display = StringProperty("")  # 当前日期
+    opacity_date = NumericProperty(0)  # 日期透明度
+    opacity_quote = NumericProperty(0)  # 名言透明度
+    opacity_hint = NumericProperty(0)  # 提示文本透明度
 
-        def customize_color(self, module):
-            """自定义颜色（空实现）"""
-            print(f"Customize color: {module}")
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # 设置初始透明度为0（完全透明）
+        self.opacity_date = 0
+        self.opacity_quote = 0
+        self.opacity_hint = 0
+        # 设置窗口背景为白色
+        Window.clearcolor = (1, 1, 1, 1)
 
-        def change_theme(self, theme_name):
-            """更改主题（空实现）"""
-            print(f"Change theme: {theme_name}")
+    def on_enter(self):
+        """进入界面时触发"""
+        # 更新时间和日期
+        self.update_time_date()
+        # 随机选择一句名言
+        self.select_random_quote()
+        # 开始渐入动画
+        self.start_animation()
+        # 每秒更新时间
+        Clock.schedule_interval(self.update_time_date, 1)
 
-        def show_message(self, message):
-            """显示消息（空实现）"""
-            print(f"Message: {message}")
+    def update_time_date(self, *args):
+        """更新时间和日期显示"""
+        now = datetime.now()
+        # 格式化时间：HH:MM:SS
+        self.current_time = now.strftime("%H:%M:%S")
+        # 格式化日期：YYYY年MM月DD日 星期X
+        self.date_display = now.strftime("%Y.%m.%d %a").replace("星期", "星期")
+
+    def select_random_quote(self):
+        """随机选择一句名言"""
+        quote = random.choice(DAILY_QUOTES)
+        self.quote_text = quote["text"]
+        self.quote_author = f"—— {quote['author']}——"
+
+    def start_animation(self):
+        """开始渐入动画序列"""
+        # 重置所有透明度
+        self.opacity_date = 0.8
+        self.opacity_quote = 0.5
+        self.opacity_hint = 0
+
+        # 创建动画序列
+        # 1. 日期时间渐入（0.5秒）
+        anim_date = Animation(opacity_date=1, duration=0.2)
+
+        # 2. 名言渐入（0.8秒，延迟0.3秒）
+        anim_quote = Animation(opacity_quote=1, duration=0.2)
+        anim_quote.start_delay = 0.1
+
+        # 3. 提示文本渐入（0.6秒，延迟1.0秒）
+        anim_hint = Animation(opacity_hint=1, duration=5)
+        anim_hint.start_delay = 0.5
+
+        # 按顺序播放动画
+        anim_date.start(self)
+        anim_quote.start(self)
+        anim_hint.start(self)
+
+    def on_touch_down(self, touch):
+        """点击任意位置进入主应用"""
+        # 切换到主界面
+        if self.manager:
+            self.manager.current = 'main'
+        return True
 
 
+# ========== 主界面类 ==========
+class MainScreen(Screen):
+    """主应用界面"""
+    daily_tracker = ObjectProperty(None)  # 主应用实例
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # 创建主应用实例
+        self.daily_tracker = DailyTracker()
+        self.add_widget(self.daily_tracker)
+
+    def on_enter(self):
+        """进入主界面时触发"""
+        # 如果从开屏界面切换过来，确保主题正确
+        if hasattr(self.daily_tracker, 'current_theme'):
+            Clock.schedule_once(lambda dt: self.daily_tracker.update_theme(self.daily_tracker.current_theme), 0.1)
+
+
+# ========== 原来的DailyTracker类（保持所有功能） ==========
 class DailyTracker(TabbedPanel):
     """主应用类，继承自Kivy的TabbedPanel"""
     # 定义属性用于访问各个标签页
     schedule_tab = ObjectProperty(None)  # 计划标签页
-    tracking_tab = ObjectProperty(None)   # 跟踪标签页
+    tracking_tab = ObjectProperty(None)  # 跟踪标签页
     personalization_tab = ObjectProperty(None)  # 设置标签页
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.do_default_tab = False  # 不使用默认标签
-        self.tab_pos = 'top_mid'     # 标签位置在顶部中间
+        self.tab_pos = 'top_mid'  # 标签位置在顶部中间
 
         # ========== 主题颜色配置 ==========
         self.theme_colors = {
             'sunny': {  # 晴天主题
-                'primary': '#FFD700',   # 主色 - 亮黄
-                'secondary': '#32CD32', # 辅色 - 青柠绿
-                'background': '#FFFAF0' # 背景 - 浅黄
+                'primary': '#FFD700',  # 主色 - 亮黄
+                'secondary': '#32CD32',  # 辅色 - 青柠绿
+                'background': '#FFFAF0'  # 背景 - 浅黄
             },
             'cloudy': {  # 多云主题
-                'primary': '#696969',   # 主色 - 暗灰
-                'secondary': '#8A2BE2', # 辅色 - 紫罗兰
-                'background': '#F8F8FF' # 背景 - 浅紫
+                'primary': '#696969',  # 主色 - 暗灰
+                'secondary': '#8A2BE2',  # 辅色 - 紫罗兰
+                'background': '#F8F8FF'  # 背景 - 浅紫
             },
             'rainy': {  # 雨天主题
-                'primary': '#1E90FF',   # 主色 - 道奇蓝
-                'secondary': '#2F4F4F', # 辅色 - 深石板灰
-                'background': '#F0F8FF' # 背景 - 浅蓝
+                'primary': '#1E90FF',  # 主色 - 道奇蓝
+                'secondary': '#2F4F4F',  # 辅色 - 深石板灰
+                'background': '#F0F8FF'  # 背景 - 浅蓝
             }
         }
-       # self.current_theme = 'sunny'  # 当前主题默认晴天
+        self.current_theme = 'sunny'  # 当前主题默认晴天
 
         # ========== 初始化数据文件 ==========
         self.data_file = "user_data.json"  # 用户数据存储文件
@@ -134,6 +203,75 @@ class DailyTracker(TabbedPanel):
 
     def create_tabs(self):
         """创建应用程序的标签页"""
+        # ========== 尝试导入组件 ==========
+        try:
+            # 尝试从组件模块导入各功能标签页
+            from components.schedule_tab import ScheduleTab
+            from components.tracking_tab import TrackingTab
+            from components.personalization_tab import PersonalizationTab
+
+            COMPONENTS_AVAILABLE = True  # 标记组件可用
+            print("Components imported successfully")
+        except ImportError as e:
+            print(f"Component import failed: {e}")
+            COMPONENTS_AVAILABLE = False  # 标记组件不可用
+
+            # ========== 组件不可用时使用回退实现 ==========
+            class ScheduleTab(BoxLayout):
+                """计划标签页的回退实现"""
+
+                def __init__(self, **kwargs):
+                    super().__init__(**kwargs)
+                    self.orientation = 'vertical'
+                    self.padding = 20
+                    self.spacing = 10
+
+                def update_alarm_display(self):
+                    """更新闹钟显示（空实现）"""
+                    pass
+
+                def update_theme(self, weather_type):
+                    """应用主题颜色（空实现）"""
+                    pass
+
+            class TrackingTab(BoxLayout):
+                """跟踪标签页的回退实现"""
+
+                def __init__(self, **kwargs):
+                    super().__init__(**kwargs)
+                    self.orientation = 'vertical'
+                    self.padding = 10
+                    self.spacing = 10
+
+                def update_theme(self, colors):
+                    """应用主题颜色（空实现）"""
+                    pass
+
+            class PersonalizationTab(BoxLayout):
+                """个性化设置标签页的回退实现"""
+
+                def __init__(self, **kwargs):
+                    super().__init__(**kwargs)
+                    self.orientation = 'vertical'
+                    self.padding = 20
+                    self.spacing = 15
+
+                def update_theme(self, colors):
+                    """应用主题颜色（空实现）"""
+                    pass
+
+                def customize_color(self, module):
+                    """自定义颜色（空实现）"""
+                    print(f"Customize color: {module}")
+
+                def change_theme(self, theme_name):
+                    """更改主题（空实现）"""
+                    print(f"Change theme: {theme_name}")
+
+                def show_message(self, message):
+                    """显示消息（空实现）"""
+                    print(f"Message: {message}")
+
         # ========== 计划标签页 ==========
         if COMPONENTS_AVAILABLE:
             self.schedule_tab = ScheduleTab()  # 使用组件实现
@@ -141,8 +279,8 @@ class DailyTracker(TabbedPanel):
             self.schedule_tab = ScheduleTab()  # 使用回退实现
         self.schedule_tab.app = self  # 设置对主应用的引用
         tab1 = TabbedPanelItem(text='Schedule')  # 创建标签项
-        tab1.add_widget(self.schedule_tab)       # 将标签页添加到标签项
-        self.add_widget(tab1)                    # 将标签项添加到主面板
+        tab1.add_widget(self.schedule_tab)  # 将标签页添加到标签项
+        self.add_widget(tab1)  # 将标签项添加到主面板
 
         # ========== 跟踪标签页 ==========
         if COMPONENTS_AVAILABLE:
@@ -229,10 +367,9 @@ class DailyTracker(TabbedPanel):
 
     def create_default_data(self):
         """创建默认用户数据"""
-        """
         self.user_data = {
             'sleep_time': "23:00",  # 默认睡眠时间
-            'wake_time': "07:00",   # 默认唤醒时间
+            'wake_time': "07:00",  # 默认唤醒时间
             'locations': {  # 预设位置数据
                 'home': {
                     'name': 'Home',
@@ -260,16 +397,16 @@ class DailyTracker(TabbedPanel):
                     'coords': [31.0268, 121.4390]
                 }
             },
-            'speed_threshold': 5.0,   # 移动速度阈值(m/s)
-            'running_threshold': 3.0, # 跑步速度阈值(m/s)
-            'stay_threshold': 60,     # 停留时间阈值(秒)
-            'personalization': {},    # 个性化设置
-            'notes': [],              # 笔记列表
-            'activities': []          # 活动列表
+            'speed_threshold': 5.0,  # 移动速度阈值(m/s)
+            'running_threshold': 3.0,  # 跑步速度阈值(m/s)
+            'stay_threshold': 60,  # 停留时间阈值(秒)
+            'personalization': {},  # 个性化设置
+            'notes': [],  # 笔记列表
+            'activities': []  # 活动列表
         }
         self.save_user_data()  # 保存默认数据
         print("Default user data created")
-"""
+
     def save_user_data(self):
         """保存用户数据到文件"""
         try:
@@ -295,7 +432,8 @@ class DailyTracker(TabbedPanel):
                     if hasattr(self, 'schedule_tab'):
                         self.schedule_tab.update_alarm_display()
 
-                    print(f"Alarm data updated: Wake up {self.user_data['wake_time']}, Sleep {self.user_data['sleep_time']}")
+                    print(
+                        f"Alarm data updated: Wake up {self.user_data['wake_time']}, Sleep {self.user_data['sleep_time']}")
             except Exception as e:
                 print(f"Failed to read alarms: {e}")
 
@@ -306,14 +444,14 @@ class DailyTracker(TabbedPanel):
 
             # 保存当前主题
             self.current_theme = weather_type
-            
+
             # 第一步：短暂变白（闪屏效果）
             original_color = Window.clearcolor  # 保存当前颜色
-            Window.clearcolor = (1, 1, 1, 1)   # 设置为白色
+            Window.clearcolor = (1, 1, 1, 1)  # 设置为白色
 
             # 第二步：延迟应用最终主题颜色
             Clock.schedule_once(
-                lambda dt: self.apply_final_theme(weather_type, self.theme_colors[weather_type]), 
+                lambda dt: self.apply_final_theme(weather_type, self.theme_colors[weather_type]),
                 0.2
             )
 
@@ -384,8 +522,8 @@ class DailyTracker(TabbedPanel):
             note = {
                 'timestamp': datetime.datetime.now().isoformat(),  # ISO格式时间戳
                 'activity': activity_data,  # 活动数据
-                'text': text,              # 笔记文本
-                'image': image_path        # 图片路径(可选)
+                'text': text,  # 笔记文本
+                'image': image_path  # 图片路径(可选)
             }
 
             # 确保notes列表存在
@@ -474,19 +612,22 @@ class DailyTracker(TabbedPanel):
             print(f"Failed to reset settings: {e}")
 
 
+# ========== 修改应用类 ==========
 class DailyTrackerApp(App):
     """Kivy应用类"""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.title = "DailyTracker - SJTU"  # 应用标题
-        self.icon = self.get_icon_path()     # 应用图标
+        self.icon = self.get_icon_path()  # 应用图标
+        self.screen_manager = None
 
     def get_icon_path(self):
         """获取图标路径"""
         # 可能的图标路径列表
         icon_paths = [
             'assets/icon.png',  # 首选路径
-            'icon.png',         # 备选路径
+            'icon.png',  # 备选路径
             './assets/icon.png',
             './icon.png'
         ]
@@ -504,16 +645,35 @@ class DailyTrackerApp(App):
         """构建应用界面"""
         print("Starting DailyTracker application...")
         print(f"Application icon: {self.icon}")
+
         # 设置初始窗口大小（桌面测试用）
         Window.size = (400, 700)
-        return DailyTracker()  # 返回主应用实例
+
+        # 创建屏幕管理器
+        self.screen_manager = ScreenManager(transition=FadeTransition(duration=0.5))
+
+        # 添加开屏界面
+        splash_screen = SplashScreen(name='splash')
+        self.screen_manager.add_widget(splash_screen)
+
+        # 添加主界面
+        main_screen = MainScreen(name='main')
+        self.screen_manager.add_widget(main_screen)
+
+        # 设置当前屏幕为开屏界面
+        self.screen_manager.current = 'splash'
+
+        return self.screen_manager
 
     def on_pause(self):
         """应用暂停时调用（Android特有）"""
         try:
             # 保存用户数据
             if hasattr(self, 'root'):
-                self.root.save_user_data()
+                if self.screen_manager and self.screen_manager.current == 'main':
+                    main_screen = self.screen_manager.get_screen('main')
+                    if main_screen and hasattr(main_screen, 'daily_tracker'):
+                        main_screen.daily_tracker.save_user_data()
             print("Application paused, data saved")
             return True  # 允许应用暂停
         except Exception as e:
@@ -523,10 +683,12 @@ class DailyTrackerApp(App):
     def on_resume(self):
         """应用恢复时调用（Android特有）"""
         try:
-            if hasattr(self, 'root'):
-                # 更新闹钟信息和天气主题
-                self.root.update_alarm_info()
-                self.root.update_weather_theme()
+            if self.screen_manager and self.screen_manager.current == 'main':
+                main_screen = self.screen_manager.get_screen('main')
+                if main_screen and hasattr(main_screen, 'daily_tracker'):
+                    # 更新闹钟信息和天气主题
+                    main_screen.daily_tracker.update_alarm_info()
+                    main_screen.daily_tracker.update_weather_theme()
             print("Application resumed, data updated")
         except Exception as e:
             print(f"Resume handling failed: {e}")
@@ -536,7 +698,10 @@ class DailyTrackerApp(App):
         try:
             # 保存用户数据
             if hasattr(self, 'root'):
-                self.root.save_user_data()
+                if self.screen_manager and self.screen_manager.current == 'main':
+                    main_screen = self.screen_manager.get_screen('main')
+                    if main_screen and hasattr(main_screen, 'daily_tracker'):
+                        main_screen.daily_tracker.save_user_data()
             print("Application stopped, data saved")
         except Exception as e:
             print(f"Stop handling failed: {e}")
@@ -551,4 +716,5 @@ if __name__ == '__main__':
         print(f"Application startup failed: {e}")
         # 打印完整错误堆栈
         import traceback
+
         traceback.print_exc()

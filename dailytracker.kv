@@ -3,6 +3,115 @@
 #:import get_color_from_hex kivy.utils.get_color_from_hex
 #:import Clock kivy.clock.Clock
 #:import Factory kivy.factory.Factory
+
+# ========== 开屏界面定义 ==========
+<SplashScreen>:
+    id: splash_screen  # 给SplashScreen设置id
+    canvas.before:
+        # 1. 先绘制背景图片
+        Rectangle:
+            source: 'assets/splash.jpg'  # 你的背景图片路径
+            pos: self.pos
+            size: self.size
+
+        # 2. 添加白色半透明遮罩（rgba: 红,绿,蓝,透明度）
+        # rgba: 1,1,1,0.5 表示白色，透明度50%
+      #  Color:
+       #     rgba: 1, 1, 1, 0.5  # 白色，50%透明度
+        #Rectangle:
+           # pos: self.pos
+            #size: self.size
+
+    RelativeLayout:
+        size_hint:1,1
+
+    # 时间（位置偏上）
+        Label:
+            text: root.current_time
+            font_size: '70sp'
+            bold: True
+            font_name: 'ARIALBD.TTF'
+            color: 1, 1, 1, 0.7
+            opacity: root.opacity_date
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.size
+            pos_hint: {'center_x': 0.5, 'center_y': 0.6}  # 垂直位置60%
+            size_hint: 1, 0.6
+
+    # 日期（位置偏下）
+        Label:
+            text: root.date_display
+            font_size: '30sp'
+            font_name: 'ARIALBD.TTF'
+            color: 1, 1, 1, 1
+            bold: True
+            opacity: root.opacity_date
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.size
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}  # 垂直位置30%
+            size_hint: 1, 0.4
+        # 时间显示
+
+
+        # 中间空白空间
+        Widget:
+            size_hint_y: 0.1
+
+        # 每日一言容器
+    RelativeLayout:
+        size_hint_y: 0.5
+        opacity: root.opacity_quote
+
+    # 名言文本（偏上）
+        Label:
+            text: root.quote_text
+            font_size: '22sp'
+            color: 1, 1, 1, 0.7
+            font_name: 'SIMKAI.TTF'
+            opacity: root.opacity_quote
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.width - 40, None
+            pos_hint: {'center_x': 0.5, 'center_y': 0.6}  # 偏上一点
+            size_hint: 0.9, 0.7  # 宽度90%，高度70%
+
+    # 名言作者（偏下）
+        Label:
+            text: root.quote_author
+            font_size: '16sp'
+            italic: True
+            font_name: 'SIMKAI.TTF'
+            color: 1, 1, 1, 0.7
+            opacity: root.opacity_quote
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.size
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}  # 偏下一点
+            size_hint: 0.9, 0.3  # 宽度90%，高度30%        # 底部空白空间
+        Widget:
+            size_hint_y: 0.02
+
+        # 提示文本
+        Label:
+            text: '>> 点击任意位置进入应用 <<'
+            font_size: '14sp'
+            color: 0.6, 0.6, 0.6, 1  # 浅灰色文字
+            opacity: root.opacity_hint
+            halign: 'center'
+            valign: 'top'  # 改为顶部对齐（最往上）
+            font_name: 'SIMYOU.TTF'
+            text_size: self.size
+            size_hint_y: 0.2
+# ========== 主界面定义 ==========
+<MainScreen>:
+    DailyTracker:
+        id: daily_tracker
+
+# ========== 原来的dailytracker.kv内容保持不变 ==========
+# 你原来的dailytracker.kv文件内容从这里开始...
+# 确保不要删除你原来的布局定义
 <TabbedPanelItem>:#给按钮添加背景颜色，background_color: 0.69, 0.84, 0.88, 1.0
     background_normal: ''
     background_down: ''
