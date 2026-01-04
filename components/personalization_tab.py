@@ -499,18 +499,15 @@ class PersonalizationTab(BoxLayout):
     def open_student_help(self, instance):
         """打开大学生帮助文档"""
         try:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            parent_dir = os.path.dirname(current_dir)
-            game_dir = os.path.join(parent_dir, 'game')
-            help_path = os.path.join(game_dir, '大学生帮助.html')
+            # 直接打开网页链接
+            help_url = "https://witty-dune-008ad7600.4.azurestaticapps.net/"
 
-            if os.path.exists(help_path):
-                webbrowser.open(f'file://{os.path.abspath(help_path)}')
-                self.show_message("提示", "正在打开大学生帮助文档...")
-            else:
-                self.show_message("错误", f"找不到帮助文件:\n{help_path}")
+            # 使用webbrowser打开网页
+            webbrowser.open(help_url)
+            self.show_message("提示", "正在打开大学生帮助网站...")
+
         except Exception as e:
-            self.show_message("错误", f"打开文档失败:\n{str(e)}")
+            self.show_message("错误", f"打开网站失败:\n{str(e)}")
 
     def open_html_game(self, game_file):
         """打开HTML游戏"""

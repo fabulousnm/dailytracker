@@ -328,14 +328,16 @@ class ChatMessage(BoxLayout):
             self.formatted_content = ""
 
     def _setup_header(self):
-        """设置头部信息"""
-        # 使用 datetime 模块的 datetime 类
+        """设置头部信息 - 支持Emoji和中文"""
         from datetime import datetime as dt
         time_str = dt.now().strftime("%H:%M:%S")
+
         if self.role == "user":
-            self.header_text = f"👤 你 ({time_str})"
+            # 用户消息：使用Unicode表示法确保Emoji显示
+            self.header_text = f"[font=seguiemj.ttf]👤[/font] [font=simkai.ttf]你[/font] ({time_str})"
         else:
-            self.header_text = f"🤖 AI助手 ({time_str})"
+            # AI消息：使用Unicode表示法确保Emoji显示
+            self.header_text = f"[font=seguiemj.ttf]🤖[/font] AI[font=simkai.ttf]助手[/font] ({time_str})"
 
     def update_content(self, new_content, is_final=False):
         """更新消息内容"""
